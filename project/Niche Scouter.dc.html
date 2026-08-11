@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #f6f7f9; color: #13171f; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #13171f; text-decoration: none; }
+  a:hover { color: #6b7280; }
+  input, button { font-family: inherit; }
+  ::selection { background: #13171f; color: #f6f7f9; }
+</style>
+</helmet>
+
+<div style="min-height:100vh; background:#f6f7f9; font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+
+  <header style="position:sticky; top:0; z-index:40; display:flex; align-items:center; justify-content:space-between; gap:24px; padding:18px 40px; background:rgba(246,247,249,0.92); backdrop-filter:blur(8px); border-bottom:1px solid #dfe3ea;">
+    <div onClick="{{ goHome }}" style="display:flex; align-items:baseline; gap:9px; cursor:pointer;">
+      <span style="font-family:'Instrument Serif', Georgia, serif; font-size:22px; letter-spacing:-0.01em;">Niche Scouter</span>
+      <span style="font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280;">beta</span>
+    </div>
+    <nav style="display:flex; align-items:center; gap:28px;">
+      <span onClick="{{ goHome }}" style="font-size:13px; color:#6b7280; cursor:pointer;">How it works</span>
+      <span onClick="{{ goPricing }}" style="font-size:13px; color:#6b7280; cursor:pointer;">Pricing</span>
+      <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
+        <span onClick="{{ goDashboard }}" style="font-size:13px; color:#6b7280; cursor:pointer;">Dashboard</span>
+        <span style="display:flex; align-items:center; gap:8px; padding:6px 11px; border:1px solid #dfe3ea; border-radius:999px; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:#13171f;">
+          <span style="width:5px; height:5px; border-radius:50%; background:#13171f;"></span>{{ creditsLabel }}
+        </span>
+      </sc-if>
+      <sc-if value="{{ signedOut }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ openAuth }}" style="padding:9px 17px; background:#13171f; color:#f6f7f9; border:none; border-radius:999px; font-size:13px; cursor:pointer;" style-hover="opacity:0.85">Sign up free</button>
+      </sc-if>
+    </nav>
+  </header>
+
+  <!-- LANDING -->
+  <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+  <main>
+    <section style="max-width:1000px; margin:0 auto; padding:110px 40px 84px; text-align:center;">
+      <div style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#6b7280; margin-bottom:32px;">Live market reconnaissance</div>
+      <h1 style="font-family:'Instrument Serif', Georgia, serif; font-weight:400; font-size:78px; line-height:1.04; letter-spacing:-0.02em; margin:0 0 26px; text-wrap:pretty;">Give us an industry.<br /><span style="font-style:italic;">We'll hand back the gaps.</span></h1>
+      <p style="max-width:560px; margin:0 auto 44px; font-size:17px; line-height:1.6; color:#454b57; text-wrap:pretty;">Niche Scouter reads live search demand, marketplace listings and community chatter, then reports the underserved corners of any market — with the evidence attached.</p>
+
+      <form onSubmit="{{ submitSearch }}" style="max-width:640px; margin:0 auto;">
+        <div style="display:flex; align-items:center; gap:12px; padding:8px 8px 8px 22px; background:#fff; border:1px solid #13171f; border-radius:999px;">
+          <input value="{{ query }}" onChange="{{ setQuery }}" placeholder="e.g. home coffee equipment" style="flex:1; min-width:0; border:none; outline:none; background:transparent; font-size:16px; color:#13171f; padding:12px 0;" />
+          <button type="submit" style="padding:13px 26px; background:#13171f; color:#f6f7f9; border:none; border-radius:999px; font-size:14px; cursor:pointer; white-space:nowrap;" style-hover="opacity:0.85">Scout niches</button>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:18px;">
+          <sc-for list="{{ examples }}" as="ex" hint-placeholder-count="4">
+            <span onClick="{{ ex.pick }}" style="padding:7px 14px; border:1px solid #dfe3ea; border-radius:999px; font-family:'IBM Plex Mono', monospace; font-size:11px; color:#6b7280; cursor:pointer; background:#fff;" style-hover="border-color:#13171f; color:#13171f">{{ ex.label }}</span>
+          </sc-for>
+        </div>
+      </form>
+    </section>
+
+    <section style="border-top:1px solid #dfe3ea; border-bottom:1px solid #dfe3ea; background:#edeff4;">
+      <div style="max-width:1180px; margin:0 auto; padding:40px; display:grid; grid-template-columns:repeat(4, 1fr); gap:40px;">
+        <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+          <div>
+            <div style="font-family:'Instrument Serif', Georgia, serif; font-size:38px; line-height:1;">{{ s.value }}</div>
+            <div style="margin-top:8px; font-size:12px; line-height:1.5; color:#6b7280;">{{ s.label }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="max-width:1180px; margin:0 auto; padding:96px 40px;">
+      <div style="display:grid; grid-template-columns:300px 1fr; gap:64px;">
+        <div>
+          <div style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#6b7280;">Method</div>
+          <h2 style="font-family:'Instrument Serif', Georgia, serif; font-weight:400; font-size:40px; line-height:1.1; margin:18px 0 0; letter-spacing:-0.01em;">Three passes, one report</h2>
+        </div>
+        <div style="display:grid; gap:1px; background:#dfe3ea; border-top:1px solid #dfe3ea; border-bottom:1px solid #dfe3ea;">
+          <sc-for list="{{ steps }}" as="st" hint-placeholder-count="3">
+            <div style="display:grid; grid-template-columns:56px 220px 1fr; gap:28px; padding:30px 4px; background:#f6f7f9; align-items:start;">
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#6b7280; padding-top:4px;">{{ st.num }}</div>
+              <div style="font-family:'Instrument Serif', Georgia, serif; font-size:24px; line-height:1.2;">{{ st.title }}</div>
+              <div style="font-size:14px; line-height:1.65; color:#454b57; text-wrap:pretty;">{{ st.body }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing" style="border-top:1px solid #dfe3ea; background:#fff;">
+      <div style="max-width:1180px; margin:0 auto; padding:88px 40px;">
+        <div style="text-align:center; margin-bottom:56px;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#6b7280;">Pricing</div>
+          <h2 style="font-family:'Instrument Serif', Georgia, serif; font-weight:400; font-size:44px; line-height:1.1; margin:16px 0 12px; letter-spacing:-0.01em;">Two reports free. Then buy reports, not a subscription.</h2>
+          <p style="font-size:15px; color:#6b7280; margin:0;">Searching and scoring are always free. Credits never expire, so come back whenever the next idea does.</p>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; align-items:stretch;">
+          <sc-for list="{{ plans }}" as="p" hint-placeholder-count="4">
+            <div style="display:flex; flex-direction:column; padding:26px; border:1px solid #dfe3ea; border-radius:4px; background:#f6f7f9;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase;">{{ p.name }}</span>
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280;">{{ p.tag }}</span>
+              </div>
+              <div style="display:flex; align-items:baseline; gap:6px; margin:22px 0 4px;">
+                <span style="font-family:'Instrument Serif', Georgia, serif; font-size:42px; line-height:1;">{{ p.price }}</span>
+                <span style="font-size:13px; color:#6b7280;">{{ p.period }}</span>
+              </div>
+              <div style="font-size:13px; color:#6b7280; margin-bottom:24px;">{{ p.reports }}</div>
+              <div style="display:grid; gap:10px; padding-top:22px; border-top:1px solid #dfe3ea; margin-bottom:28px;">
+                <sc-for list="{{ p.features }}" as="f" hint-placeholder-count="3">
+                  <div style="display:grid; grid-template-columns:14px 1fr; gap:10px; font-size:13px; line-height:1.5; color:#454b57;">
+                    <span style="font-family:'IBM Plex Mono', monospace; color:#6b7280;">/</span><span>{{ f }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <button onClick="{{ p.action }}" style="margin-top:auto; padding:13px; border-radius:999px; font-size:13px; cursor:pointer; border:1px solid #13171f; background:{{ p.btnBg }}; color:{{ p.btnFg }};" style-hover="opacity:0.85">{{ p.cta }}</button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <footer style="border-top:1px solid #dfe3ea; padding:36px 40px; display:flex; justify-content:space-between; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#6b7280;">
+      <span>Nichescouter.com</span>
+      <span>Evidence-linked market reports</span>
+    </footer>
+  </main>
+  </sc-if>
+
+  <!-- RESULTS -->
+  <sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width:1180px; margin:0 auto; padding:48px 40px 96px;">
+    <form onSubmit="{{ submitSearch }}" style="display:flex; align-items:center; gap:12px; padding:6px 6px 6px 20px; background:#fff; border:1px solid #dfe3ea; border-radius:999px; max-width:620px;">
+      <input value="{{ query }}" onChange="{{ setQuery }}" placeholder="Search an industry" style="flex:1; min-width:0; border:none; outline:none; background:transparent; font-size:15px; padding:10px 0;" />
+      <button type="submit" style="padding:11px 22px; background:#13171f; color:#f6f7f9; border:none; border-radius:999px; font-size:13px; cursor:pointer;" style-hover="opacity:0.85">Re-scout</button>
+    </form>
+
+    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:24px; margin:40px 0 10px;">
+      <h1 style="font-family:'Instrument Serif', Georgia, serif; font-weight:400; font-size:44px; line-height:1.1; margin:0; letter-spacing:-0.01em;">{{ resultsHeading }}</h1>
+      <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#6b7280; white-space:nowrap;">{{ resultCount }}</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:9px; padding-bottom:22px; border-bottom:1px solid #dfe3ea; font-family:'IBM Plex Mono', monospace; font-size:11px; color:#6b7280;">
+      <span style="width:5px; height:5px; border-radius:50%; background:{{ statusDot }};"></span>{{ statusLine }}
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; margin-top:28px;">
+      <sc-for list="{{ niches }}" as="n" hint-placeholder-count="6">
+        <div style="display:flex; flex-direction:column; padding:28px; border:1px solid #dfe3ea; border-radius:4px; background:#fff;" style-hover="border-color:#c6ccd8">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280;">{{ n.rank }}</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; padding:5px 9px; border-radius:999px; border:1px solid #dfe3ea; color:{{ n.stateFg }}; background:{{ n.stateBg }};">{{ n.stateLabel }}</span>
+          </div>
+          <h3 style="font-family:'Instrument Serif', Georgia, serif; font-weight:400; font-size:29px; line-height:1.15; margin:0 0 10px;">{{ n.name }}</h3>
+          <p style="font-size:14px; line-height:1.6; color:#454b57; margin:0 0 22px; text-wrap:pretty;">{{ n.teaser }}</p>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; padding:20px 0; border-top:1px solid #dfe3ea; border-bottom:1px solid #dfe3ea;">
+            <div>
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280; margin-bottom:9px;">Demand</div>
+              <div style="display:flex; align-items:baseline; gap:6px;">
+                <span style="font-family:'Instrument Serif', Georgia, serif; font-size:30px; line-height:1;">{{ n.demand }}</span>
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:#6b7280;">/100</span>
+              </div>
+              <div style="height:3px; background:#e8ebf1; margin-top:10px;">
+                <div style="height:3px; background:#13171f; width:{{ n.demandPct }};"></div>
+              </div>
+            </div>
+            <div>
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280; margin-bottom:9px;">Revenue potential</div>
+              <div style="font-family:'Instrument Serif', Georgia, serif; font-size:30px; line-height:1;">{{ n.revenue }}</div>
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:#6b7280; margin-top:10px;">{{ n.revenueNote }}</div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:20px;">
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <sc-for list="{{ n.locked }}" as="l" hint-placeholder-count="4">
+                <span style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:#a3aab8; padding:5px 9px; background:#edeff4; border-radius:3px;">{{ l }}</span>
+              </sc-for>
+            </div>
+          </div>
+          <button onClick="{{ n.reveal }}" style="margin-top:20px; padding:13px; background:#13171f; color:#f6f7f9; border:none; border-radius:999px; font-size:13px; cursor:pointer;" style-hover="opacity:0.85">{{ n.revealLabel }}</button>
+        </div>
+      </sc-for>
+    </div>
+  </main>
+  </sc-if>
+
+  <!-- REPORT -->
+  <sc-if value="{{ isReport }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width:980px; margin:0 auto; padding:44px 40px 110px;">
+    <span onClick="{{ backToResults }}" style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#6b7280; cursor:pointer;" style-hover="color:#13171f">&#8592; Back to results</span>
+
+    <div style="margin-top:32px; padding-bottom:34px; border-bottom:1px solid #13171f;">
+      <div style="display:flex; align-items:center; gap:12px; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280;">
+        <span>Full report</span><span>&#183;</span><span>{{ reportDate }}</span><span>&#183;</span><span>{{ reportQuery }}</span>
+      </div>
+      <h1 style="font-family:'Instrument Serif', Georgia, serif; font-weight:400; font-size:60px; line-height:1.06; letter-spacing:-0.02em; margin:20px 0 18px; text-wrap:pretty;">{{ report.name }}</h1>
+      <p style="max-width:660px; font-size:18px; line-height:1.6; color:#454b57; margin:0;">{{ report.thesis }}</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:1px; background:#dfe3ea; border-bottom:1px solid #dfe3ea;">
+      <sc-for list="{{ report.metrics }}" as="m" hint-placeholder-count="4">
+        <div style="background:#f6f7f9; padding:24px 0;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280;">{{ m.label }}</div>
+          <div style="font-family:'Instrument Serif', Georgia, serif; font-size:34px; line-height:1; margin-top:10px;">{{ m.value }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <section style="display:grid; grid-template-columns:220px 1fr; gap:48px; padding:44px 0; border-bottom:1px solid #dfe3ea;">
+      <h2 style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280; margin:0;">Demand trend</h2>
+      <div>
+        <div style="display:flex; align-items:flex-end; gap:6px; height:130px; padding-bottom:12px; border-bottom:1px solid #dfe3ea;">
+          <sc-for list="{{ report.trend }}" as="t" hint-placeholder-count="12">
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%;">
+              <div style="background:#13171f; height:{{ t.h }};"></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:10px; font-family:'IBM Plex Mono', monospace; font-size:10px; color:#6b7280;">
+          <span>{{ report.trendStart }}</span><span>{{ report.trendNote }}</span><span>{{ report.trendEnd }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section style="display:grid; grid-template-columns:220px 1fr; gap:48px; padding:44px 0; border-bottom:1px solid #dfe3ea;">
+      <h2 style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280; margin:0;">Audience profile</h2>
+      <div>
+        <p style="font-size:16px; line-height:1.7; color:#13171f; margin:0 0 24px; text-wrap:pretty;">{{ report.audience }}</p>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:#dfe3ea;">
+          <sc-for list="{{ report.audienceFacts }}" as="a" hint-placeholder-count="3">
+            <div style="background:#f6f7f9; padding:18px 18px 18px 0;">
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280;">{{ a.k }}</div>
+              <div style="font-size:14px; line-height:1.5; margin-top:8px;">{{ a.v }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="display:grid; grid-template-columns:220px 1fr; gap:48px; padding:44px 0; border-bottom:1px solid #dfe3ea;">
+      <h2 style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280; margin:0;">Keyword clusters</h2>
+      <div style="display:grid; gap:14px;">
+        <sc-for list="{{ report.keywords }}" as="k" hint-placeholder-count="4">
+          <div style="display:grid; grid-template-columns:1fr 90px 90px 70px; gap:16px; align-items:center; padding-bottom:14px; border-bottom:1px solid #e8ebf1;">
+            <span style="font-size:15px;">{{ k.term }}</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#454b57;">{{ k.vol }}</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#454b57;">{{ k.kd }}</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:12px; color:#6b7280; text-align:right;">{{ k.growth }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display:grid; grid-template-columns:220px 1fr; gap:48px; padding:44px 0; border-bottom:1px solid #dfe3ea;">
+      <h2 style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280; margin:0;">Competitor breakdown</h2>
+      <div style="display:grid; gap:18px;">
+        <sc-for list="{{ report.competitors }}" as="c" hint-placeholder-count="3">
+          <div style="display:grid; grid-template-columns:200px 1fr; gap:24px; padding-bottom:18px; border-bottom:1px solid #e8ebf1;">
+            <div>
+              <div style="font-size:15px;">{{ c.name }}</div>
+              <div style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:#6b7280; margin-top:6px;">{{ c.scale }}</div>
+            </div>
+            <div style="font-size:14px; line-height:1.6; color:#454b57; text-wrap:pretty;">{{ c.gap }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display:grid; grid-template-columns:220px 1fr; gap:48px; padding:44px 0; border-bottom:1px solid #dfe3ea;">
+      <h2 style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280; margin:0;">Monetization playbook</h2>
+      <div style="display:grid; gap:1px; background:#dfe3ea;">
+        <sc-for list="{{ report.playbook }}" as="p" hint-placeholder-count="3">
+          <div style="background:#f6f7f9; display:grid; grid-template-columns:34px 190px 1fr 110px; gap:20px; padding:20px 0; align-items:start;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#6b7280;">{{ p.num }}</span>
+            <span style="font-size:15px; line-height:1.35;">{{ p.title }}</span>
+            <span style="font-size:14px; line-height:1.6; color:#454b57;">{{ p.body }}</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#13171f; text-align:right;">{{ p.margin }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display:grid; grid-template-columns:220px 1fr; gap:48px; padding:44px 0; border-bottom:1px solid #dfe3ea;">
+      <h2 style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280; margin:0;">Product &amp; content ideas</h2>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <sc-for list="{{ report.ideas }}" as="i" hint-placeholder-count="6">
+          <div style="padding:18px; border:1px solid #dfe3ea; border-radius:3px; background:#fff; font-size:14px; line-height:1.55; color:#13171f;">{{ i }}</div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display:grid; grid-template-columns:220px 1fr; gap:48px; padding:44px 0; border-bottom:1px solid #dfe3ea;">
+      <h2 style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280; margin:0;">Sourcing notes</h2>
+      <div style="display:grid; gap:12px;">
+        <sc-for list="{{ report.sourcing }}" as="s" hint-placeholder-count="3">
+          <div style="display:grid; grid-template-columns:14px 1fr; gap:12px; font-size:15px; line-height:1.65; color:#13171f;">
+            <span style="font-family:'IBM Plex Mono', monospace; color:#6b7280;">/</span><span>{{ s }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display:grid; grid-template-columns:220px 1fr; gap:48px; padding:44px 0; border-bottom:1px solid #dfe3ea;">
+      <h2 style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280; margin:0;">Risk factors</h2>
+      <div style="display:grid; gap:16px;">
+        <sc-for list="{{ report.risks }}" as="r" hint-placeholder-count="3">
+          <div style="display:grid; grid-template-columns:110px 1fr; gap:20px; padding-bottom:16px; border-bottom:1px solid #e8ebf1;">
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#6b7280;">{{ r.level }}</span>
+            <span style="font-size:14px; line-height:1.6; color:#454b57;">{{ r.body }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display:grid; grid-template-columns:220px 1fr; gap:48px; padding:44px 0;">
+      <h2 style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280; margin:0;">Sources</h2>
+      <div style="display:grid; gap:10px;">
+        <sc-for list="{{ report.sources }}" as="s" hint-placeholder-count="5">
+          <div style="display:grid; grid-template-columns:1fr 130px; gap:16px; padding-bottom:10px; border-bottom:1px solid #e8ebf1; font-family:'IBM Plex Mono', monospace; font-size:11px; color:#454b57;">
+            <span>{{ s.title }}</span><span style="color:#6b7280; text-align:right;">{{ s.when }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+  </sc-if>
+
+  <!-- DASHBOARD -->
+  <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}">
+  <main style="max-width:1180px; margin:0 auto; padding:56px 40px 110px;">
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; padding-bottom:28px; border-bottom:1px solid #13171f;">
+      <div>
+        <div style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280;">Account</div>
+        <h1 style="font-family:'Instrument Serif', Georgia, serif; font-weight:400; font-size:48px; line-height:1.05; margin:16px 0 0; letter-spacing:-0.01em;">{{ accountEmail }}</h1>
+      </div>
+      <button onClick="{{ openPaywall }}" style="padding:12px 22px; background:#13171f; color:#f6f7f9; border:none; border-radius:999px; font-size:13px; cursor:pointer;" style-hover="opacity:0.85">Add report credits</button>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:#dfe3ea; border-bottom:1px solid #dfe3ea;">
+      <sc-if value="{{ true }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#f6f7f9; padding:26px 0;">
+          <div style="font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280;">Report credits left</div>
+          <div style="font-family:'Instrument Serif', Georgia, serif; font-size:40px; line-height:1; margin-top:10px;">{{ credits }}</div>
+        </div>
+      </sc-if>
+      <div style="background:#f6f7f9; padding:26px 0 26px 26px;">
+        <div style="font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280;">Reports opened</div>
+        <div style="font-family:'Instrument Serif', Georgia, serif; font-size:40px; line-height:1; margin-top:10px;">{{ openedCount }}</div>
+      </div>
+      <div style="background:#f6f7f9; padding:26px 0 26px 26px;">
+        <div style="font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; color:#6b7280;">Billing</div>
+        <div style="font-family:'Instrument Serif', Georgia, serif; font-size:30px; line-height:1.1; margin-top:14px;">Pay per report</div>
+      </div>
+    </div>
+
+    <h2 style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280; margin:44px 0 18px;">Unlocked reports</h2>
+    <sc-if value="{{ hasUnlocked }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid; gap:1px; background:#dfe3ea; border-top:1px solid #dfe3ea; border-bottom:1px solid #dfe3ea;">
+        <sc-for list="{{ unlockedList }}" as="u" hint-placeholder-count="2">
+          <div onClick="{{ u.open }}" style="background:#f6f7f9; display:grid; grid-template-columns:1fr 200px 130px 90px; gap:20px; align-items:center; padding:22px 0; cursor:pointer;" style-hover="background:#edeff4">
+            <span style="font-family:'Instrument Serif', Georgia, serif; font-size:24px;">{{ u.name }}</span>
+            <span style="font-size:13px; color:#6b7280;">{{ u.query }}</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#6b7280;">{{ u.date }}</span>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; text-align:right;">Open &#8594;</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ noUnlocked }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:56px; border:1px solid #dfe3ea; border-radius:4px; text-align:center; background:#fff;">
+        <p style="font-size:15px; color:#6b7280; margin:0 0 20px;">Nothing unlocked yet. Your two free reports are waiting.</p>
+        <button onClick="{{ goHome }}" style="padding:12px 22px; background:#13171f; color:#f6f7f9; border:none; border-radius:999px; font-size:13px; cursor:pointer;">Scout a market</button>
+      </div>
+    </sc-if>
+  </main>
+  </sc-if>
+
+  <!-- AUTH MODAL -->
+  <sc-if value="{{ showAuth }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModals }}" style="position:fixed; inset:0; z-index:80; background:rgba(19,23,31,0.34); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:32px;">
+      <div onClick="{{ stop }}" style="width:100%; max-width:440px; background:#f6f7f9; border:1px solid #13171f; border-radius:6px; padding:38px;">
+        <div style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280;">Create account</div>
+        <h2 style="font-family:'Instrument Serif', Georgia, serif; font-weight:400; font-size:34px; line-height:1.1; margin:14px 0 10px;">Two full reports, on the house.</h2>
+        <p style="font-size:14px; line-height:1.6; color:#454b57; margin:0 0 26px;">No card required. Keep every report you open.</p>
+        <form onSubmit="{{ submitAuth }}" style="display:grid; gap:10px;">
+          <input value="{{ email }}" onChange="{{ setEmail }}" placeholder="you@company.com" style="padding:14px 16px; border:1px solid #dfe3ea; border-radius:4px; background:#fff; font-size:14px; outline:none;" />
+          <input type="password" value="{{ password }}" onChange="{{ setPassword }}" placeholder="Choose a password" style="padding:14px 16px; border:1px solid #dfe3ea; border-radius:4px; background:#fff; font-size:14px; outline:none;" />
+          <button type="submit" style="margin-top:8px; padding:14px; background:#13171f; color:#f6f7f9; border:none; border-radius:999px; font-size:14px; cursor:pointer;" style-hover="opacity:0.85">Create account &amp; unlock</button>
+        </form>
+        <p style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:#6b7280; margin:20px 0 0; line-height:1.6;">Already have an account? <span onClick="{{ submitAuth }}" style="text-decoration:underline; cursor:pointer;">Sign in</span></p>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- PAYWALL MODAL -->
+  <sc-if value="{{ showPaywall }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeModals }}" style="position:fixed; inset:0; z-index:80; background:rgba(19,23,31,0.34); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:32px;">
+      <div onClick="{{ stop }}" style="width:100%; max-width:560px; background:#f6f7f9; border:1px solid #13171f; border-radius:6px; padding:38px;">
+        <div style="font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:#6b7280;">{{ paywallEyebrow }}</div>
+        <h2 style="font-family:'Instrument Serif', Georgia, serif; font-weight:400; font-size:34px; line-height:1.1; margin:14px 0 10px;">{{ paywallTitle }}</h2>
+        <p style="font-size:14px; line-height:1.6; color:#454b57; margin:0 0 26px;">{{ paywallNiche }}</p>
+        <div style="display:grid; gap:10px;">
+          <sc-for list="{{ paywallOptions }}" as="o" hint-placeholder-count="3">
+            <div onClick="{{ o.action }}" style="display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center; padding:20px; border:1px solid {{ o.border }}; border-radius:4px; background:#fff; cursor:pointer;" style-hover="border-color:#13171f">
+              <div>
+                <div style="font-size:15px;">{{ o.name }}</div>
+                <div style="font-size:13px; color:#6b7280; margin-top:5px;">{{ o.detail }}</div>
+              </div>
+              <div style="font-family:'Instrument Serif', Georgia, serif; font-size:26px;">{{ o.price }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <p style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:#6b7280; margin:20px 0 0;">One-time payment. Credits never expire and reports you own stay yours.</p>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const DATA = {
+  "home coffee equipment": [
+    { name: "Espresso puck screens & hardware", teaser: "Enthusiast upgrade parts sold almost entirely through one-person Etsy shops with no brand and no content.", demand: 78, revenue: "$14k/mo", revenueNote: "top-quartile store",
+      thesis: "A high-repeat accessories market where demand is growing faster than supply, and the incumbents are hobbyists without brands, content, or fulfillment discipline.",
+      metrics: [["Demand", "78"], ["Competition", "31"], ["Rev. potential", "$14k/mo"], ["Confidence", "High"]],
+      trend: [38, 41, 46, 44, 52, 58, 55, 64, 71, 69, 77, 83], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+118% search interest, 12 mo",
+      audience: "Men 28–45 who bought a mid-tier espresso machine in the last 18 months and now treat dial-in as a hobby. They read reviews before buying, follow two or three creators, and will pay a 40% premium for machined metal over plastic.",
+      audienceFacts: [["Median spend", "$68 / order"], ["Repeat rate", "2.4 orders / yr"], ["Where they are", "Reddit, YouTube"]],
+      keywords: [["puck screen 58.5mm", "9.4k/mo", "KD 11", "+64%"], ["dosing funnel magnetic", "5.1k/mo", "KD 8", "+41%"], ["bottomless portafilter guide", "3.8k/mo", "KD 14", "+22%"], ["wdt tool needle size", "2.9k/mo", "KD 6", "+88%"]],
+      competitors: [["Two Etsy makers", "~$9k/mo combined", "No brand, 3–9 day handling times, zero editorial content. Losing search to forum threads."], ["One DTC brand", "est. $40k/mo", "Strong product, weak SEO — ranks for 4 of the top 20 terms."], ["Marketplace generics", "high volume", "Race to the bottom on price; quality complaints in 1 of 5 reviews create an obvious quality position."]],
+      playbook: [["01", "Own the sizing problem", "Ship a fit-checker page keyed to machine model, then sell the correct part. Converts search intent directly.", "62% margin"], ["02", "Bundle the dial-in kit", "Screen + funnel + WDT tool as one starter bundle at $79 to raise first-order value.", "58% margin"], ["03", "Consumable follow-on", "Filters and gaskets on a 90-day email cycle turn a one-off into a subscription.", "71% margin"]],
+      ideas: ["Fit-checker tool by machine model", "\"Dial-in in 3 shots\" email course", "Comparison teardown video series", "Machined-in-EU quality positioning", "Café co-branded limited runs", "Affiliate program for espresso creators"],
+      sourcing: ["Two verified CNC suppliers in Portugal and Taiwan; MOQ 250 units, 18–22 day lead time.", "Landed unit cost $6.40–$9.10 depending on mesh spec; tooling is a one-time $1,100.", "Air freight is viable at this weight — avoid the 6-week sea window competitors are stuck with."],
+      risks: [["Medium", "The one strong DTC brand could fix its SEO within two quarters and absorb the search upside."], ["Low", "Machine-model fragmentation means SKU count grows faster than revenue if you chase every fitment."], ["Low", "Trend is enthusiast-driven and has been climbing for three years — unlikely to be a spike."]],
+      sources: [["Search volume, 14 keyword set", "2 days ago"], ["Etsy + marketplace listing scrape (612 listings)", "yesterday"], ["r/espresso thread sentiment, 90 days", "today"], ["Supplier directory quotes", "5 days ago"], ["Competitor rank tracking snapshot", "today"]] },
+    { name: "Decaf-only subscription roasting", teaser: "Growing sober-curious and late-day drinker demand; almost no roaster treats decaf as the headline product.", demand: 71, revenue: "$9k/mo", revenueNote: "yr-1 realistic",
+      thesis: "Decaf has shed its stigma faster than roasters have repositioned. A brand that leads with decaf owns a category nobody is defending.",
+      metrics: [["Demand", "71"], ["Competition", "24"], ["Rev. potential", "$9k/mo"], ["Confidence", "Medium"]],
+      trend: [30, 34, 33, 40, 45, 48, 54, 52, 61, 66, 70, 74], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+91% search interest, 12 mo",
+      audience: "Two overlapping groups: parents and shift workers who want an evening cup, and the sober-curious cohort trading alcohol rituals for coffee ones. Both are subscription-friendly and brand-loyal once they find a decaf that isn't flat.",
+      audienceFacts: [["Median spend", "$22 / bag"], ["Repeat rate", "monthly"], ["Where they are", "Instagram, TikTok"]],
+      keywords: [["best decaf coffee beans", "22k/mo", "KD 28", "+37%"], ["swiss water process decaf", "6.7k/mo", "KD 12", "+52%"], ["decaf espresso subscription", "1.9k/mo", "KD 7", "+120%"], ["decaf that actually tastes good", "1.2k/mo", "KD 4", "+64%"]],
+      competitors: [["Specialty roasters", "large", "Carry one token decaf SKU, rarely mention it in marketing. No decaf-first shelf presence anywhere."], ["One decaf-only brand (UK)", "est. $60k/mo", "Proves the model; no meaningful presence in North America."], ["Grocery decaf", "commodity", "Stale, pre-ground, and the reason customers assume decaf is bad — your whole wedge."]],
+      playbook: [["01", "Decaf-first subscription", "Three roast profiles, monthly cadence, $19/bag. Category ownership beats SKU breadth.", "54% margin"], ["02", "Process education", "Rank for the Swiss-water vs CO2 question; it is the highest-intent unbranded search in the space.", "n/a"], ["03", "Evening-ritual gifting", "Holiday gift sets aimed at the non-drinker on every shopping list.", "61% margin"]],
+      ideas: ["Blind decaf-vs-caffeinated tasting kit", "\"After six\" brand line", "Sober-community partnerships", "Decaf process explainer microsite", "Café wholesale for evening service", "Single-origin decaf drops"],
+      sourcing: ["Swiss-water decaf green beans available from three importers; $4.10–$5.60/lb at 5-bag minimums.", "Toll roasting removes capex — expect $1.80/lb roasted plus bag and label at $0.75.", "Freshness is the differentiator: roast-to-order within 48 hours is achievable at this volume."],
+      risks: [["High", "Green decaf supply is thinner than caffeinated; a bad harvest moves your cost 20%."], ["Medium", "A large roaster could launch a decaf line and outspend you on paid."], ["Low", "Demand curve is structural, tied to alcohol decline, not a fad cycle."]],
+      sources: [["Keyword expansion, 40-term set", "today"], ["Importer price sheets", "3 days ago"], ["Subscription-brand teardown (9 brands)", "yesterday"], ["Sober-curious market reporting", "1 week ago"], ["Instagram hashtag volume trend", "today"]] },
+    { name: "Small-batch cold brew concentrate for offices", teaser: "B2B channel with recurring orders that DTC-obsessed roasters have almost entirely ignored.", demand: 64, revenue: "$18k/mo", revenueNote: "12 accounts",
+      thesis: "Offices re-order on a schedule and barely price-shop. The channel needs a light logistics touch that consumer-first roasters refuse to build.",
+      metrics: [["Demand", "64"], ["Competition", "38"], ["Rev. potential", "$18k/mo"], ["Confidence", "Medium"]],
+      trend: [44, 42, 48, 50, 47, 53, 58, 60, 57, 63, 66, 68], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+55% search interest, 12 mo",
+      audience: "Office managers and workplace-experience leads at 30–250 person companies who want a visible perk upgrade under a $600/mo line item and one invoice.",
+      audienceFacts: [["Account value", "$420 / mo"], ["Churn", "~8% / yr"], ["Where they are", "LinkedIn, referrals"]],
+      keywords: [["office cold brew delivery", "3.4k/mo", "KD 19", "+48%"], ["cold brew concentrate wholesale", "2.1k/mo", "KD 15", "+33%"], ["office coffee service alternative", "1.6k/mo", "KD 22", "+27%"], ["nitro keg rental", "980/mo", "KD 11", "+40%"]],
+      competitors: [["National OCS vendors", "enterprise", "Contract-heavy, slow, and hated for equipment fees. Vulnerable on flexibility and taste."], ["Local roasters", "small", "Will sell you beans but won't handle kegs, swaps, or invoicing."], ["Canned brands", "retail", "Convenient but expensive per serving and a waste-optics problem for ESG-minded offices."]],
+      playbook: [["01", "Concentrate + keg swap", "Route-based swaps every two weeks; one invoice, no equipment fee.", "49% margin"], ["02", "Land via one anchor office", "Densify by building block — route economics decide profitability here.", "n/a"], ["03", "Add tea and sparkling", "Same route, higher order value, near-zero added delivery cost.", "57% margin"]],
+      ideas: ["Two-week free pilot keg", "Per-head cost calculator for office managers", "Referral credit between neighboring offices", "Branded tap handles", "Quarterly tasting for anchor accounts", "Sustainability one-pager for procurement"],
+      sourcing: ["Co-packing available at 200-gallon runs; $3.90/gallon concentrate at that volume.", "Refurbished 5-gallon kegs at $78 each; expect a 4% annual loss rate.", "Refrigerated van or insulated totes both work under a 40-mile route radius."],
+      risks: [["Medium", "Route density is everything — a scattered first ten accounts kills the margin."], ["Medium", "Office headcount volatility moves volume quarter to quarter."], ["Low", "Cold brew consumption is seasonal but the office floor is climate-controlled year-round."]],
+      sources: [["Local business density analysis", "today"], ["Co-packer quote set", "4 days ago"], ["OCS contract review, 6 vendors", "1 week ago"], ["LinkedIn job-post signal (office manager)", "today"], ["Keyword volume, B2B cluster", "yesterday"]] },
+    { name: "Manual brewer restoration & parts", teaser: "Vintage grinders and pour-over gear trade briskly, but nobody sells the gaskets and burrs that keep them alive.", demand: 58, revenue: "$6k/mo", revenueNote: "one-operator ceiling",
+      thesis: "A small, durable business: fragmented secondhand supply, motivated buyers, and replacement parts nobody stocks.",
+      metrics: [["Demand", "58"], ["Competition", "18"], ["Rev. potential", "$6k/mo"], ["Confidence", "High"]],
+      trend: [36, 39, 37, 42, 45, 43, 49, 51, 50, 55, 57, 59], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+61% search interest, 12 mo",
+      audience: "Collectors and design-minded home brewers who buy on eBay and estate sales, then hunt forums for a gasket nobody manufactures anymore.",
+      audienceFacts: [["Median spend", "$40 / order"], ["Repeat rate", "1.8 orders / yr"], ["Where they are", "Forums, eBay"]],
+      keywords: [["vintage grinder burr replacement", "2.6k/mo", "KD 9", "+44%"], ["chemex lid gasket", "1.4k/mo", "KD 5", "+29%"], ["restore hand grinder", "1.1k/mo", "KD 7", "+51%"], ["discontinued brewer parts", "870/mo", "KD 4", "+38%"]],
+      competitors: [["Forum classifieds", "informal", "Where demand currently goes to die. No inventory, no search presence, no trust layer."], ["One US parts seller", "est. $5k/mo", "Site is unusable on mobile; no fitment data, no photos of installed parts."], ["OEM brands", "large", "Discontinue parts after 5 years by policy — the structural reason this niche exists."]],
+      playbook: [["01", "Parts catalog with fitment", "Model-indexed catalog is the moat; search intent is already exact.", "66% margin"], ["02", "Restoration service tier", "Send-in service at $120 per unit for buyers who won't do it themselves.", "48% margin"], ["03", "Refurb resale", "Buy neglected units, restore, resell at 2.5x with a 6-month guarantee.", "52% margin"]],
+      ideas: ["Model-indexed parts catalog", "Restoration teardown video per model", "Buyer's guide for estate-sale finds", "Gasket subscription for café accounts", "Marketplace for restored units", "3D-printed replacements for dead SKUs"],
+      sourcing: ["Silicone gaskets moldable locally at $180 tooling per profile, $0.35/unit thereafter.", "Burr sets from two Asian suppliers at $11–$19; quality varies, sample before committing.", "Donor units are the cheapest inventory source — set eBay alerts under $30."],
+      risks: [["Medium", "Ceiling is real: one operator, physical inventory, no venture-scale outcome."], ["Low", "Fitment complexity is a barrier to competitors as much as to you."], ["Low", "Vintage supply keeps refreshing as today's gear ages out."]],
+      sources: [["eBay sold-listing analysis (18 mo)", "today"], ["Forum request-thread mining", "2 days ago"], ["Gasket moulder quotes", "6 days ago"], ["Keyword set, parts cluster", "yesterday"], ["OEM parts-policy review", "1 week ago"]] }
+  ],
+  "pet wellness": [
+    { name: "Senior-dog mobility supplements", teaser: "Owners of arthritic dogs buy monthly for years, and the shelf is dominated by generic joint chews with no age targeting.", demand: 81, revenue: "$22k/mo", revenueNote: "yr-2 realistic",
+      thesis: "The highest-LTV segment in pet wellness is treated as an afterthought: senior-specific formulation and dosing guidance is nearly absent from a market of undifferentiated joint chews.",
+      metrics: [["Demand", "81"], ["Competition", "44"], ["Rev. potential", "$22k/mo"], ["Confidence", "High"]],
+      trend: [46, 49, 52, 51, 58, 62, 66, 64, 72, 76, 79, 84], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+83% search interest, 12 mo",
+      audience: "Owners 40–65 whose dog has just been diagnosed or has visibly slowed. Emotionally motivated, vet-influenced, and extremely retention-friendly: they re-order until the dog dies.",
+      audienceFacts: [["Median spend", "$46 / mo"], ["Retention", "14 mo average"], ["Where they are", "Facebook groups, vet referral"]],
+      keywords: [["dog joint supplement arthritis", "18k/mo", "KD 34", "+41%"], ["senior dog mobility chews", "4.2k/mo", "KD 16", "+77%"], ["green lipped mussel dog dosage", "2.8k/mo", "KD 9", "+58%"], ["dog struggling to stand up", "6.1k/mo", "KD 12", "+35%"]],
+      competitors: [["Two large chew brands", "national", "Age-agnostic formulas and marketing. No senior line, no dosing-by-weight guidance."], ["Vet-channel brands", "clinical", "Credible but priced at 2.5x and unavailable without a visit — a clear pricing gap."], ["Amazon private label", "commodity", "Underdosed actives relative to label claims; third-party assay results are a devastating content angle."]],
+      playbook: [["01", "Senior-only line", "Formulate for 7+ with weight-banded dosing. Category clarity is the entire wedge.", "68% margin"], ["02", "Subscription by weight", "Auto-ship sized to the dog removes reorder friction and lifts LTV sharply.", "72% margin"], ["03", "Vet clinic co-sell", "Sample packs in clinics buy trust that ads can't.", "54% margin"]],
+      ideas: ["Mobility-decline assessment quiz", "Third-party assay transparency page", "Weight-banded dosing calculator", "Vet-authored senior care guide", "Before/after mobility video series", "Clinic sample-pack program"],
+      sourcing: ["Two US contract manufacturers quote $3.10–$4.40 per 60-count bag at 5,000-unit runs.", "Green-lipped mussel and UC-II are the cost drivers; NZ-sourced GLM carries a defensible provenance story.", "NASC certification is roughly $1,650/yr and is table stakes for retailer and vet channels."],
+      risks: [["High", "Supplement claims are FTC-sensitive; every efficacy statement needs substantiation review."], ["Medium", "A national brand launching a senior SKU would compress your window to ~3 quarters."], ["Low", "Aging pet population is a structural, decade-long tailwind."]],
+      sources: [["Search volume, 22-keyword set", "today"], ["Marketplace label-claim audit (74 SKUs)", "yesterday"], ["Contract manufacturer quotes", "4 days ago"], ["Vet forum sentiment, 90 days", "2 days ago"], ["NASC certification requirements", "1 week ago"]] },
+    { name: "Cat enrichment for small apartments", teaser: "Urban cat owners want stimulation without floor space; every product on the market assumes a house.", demand: 69, revenue: "$11k/mo", revenueNote: "top-quartile store",
+      thesis: "Apartment cat ownership is growing fastest in the densest cities, and nobody designs for vertical, wall-mounted, landlord-safe enrichment.",
+      metrics: [["Demand", "69"], ["Competition", "27"], ["Rev. potential", "$11k/mo"], ["Confidence", "Medium"]],
+      trend: [34, 38, 41, 45, 43, 50, 55, 58, 61, 60, 66, 71], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+96% search interest, 12 mo",
+      audience: "Renters 25–40 in one-bedroom apartments, design-conscious, guilt-driven about leaving the cat alone all day, unwilling to install anything that costs their deposit.",
+      audienceFacts: [["Median spend", "$74 / order"], ["Repeat rate", "1.6 orders / yr"], ["Where they are", "TikTok, Instagram"]],
+      keywords: [["cat shelves no drill", "5.4k/mo", "KD 10", "+112%"], ["small apartment cat furniture", "3.9k/mo", "KD 18", "+64%"], ["vertical cat wall renter friendly", "1.7k/mo", "KD 6", "+140%"], ["cat enrichment while at work", "2.3k/mo", "KD 8", "+49%"]],
+      competitors: [["Big-box cat furniture", "national", "Bulky floor towers in beige carpet. Actively wrong for the customer and the room."], ["Etsy woodworkers", "~$14k/mo combined", "Beautiful, drill-required, 3-week lead times, no renter messaging."], ["One design brand", "est. $30k/mo", "Owns the aesthetic position but ignores the no-drill constraint entirely."]],
+      playbook: [["01", "No-drill mounting system", "Tension and adhesive systems rated to 25 lb; the constraint IS the product.", "59% margin"], ["02", "Modular room kits", "Sell a configured wall, not a shelf — raises AOV from $40 to $180.", "61% margin"], ["03", "Renter-safe guarantee", "Cover deposit damage; removes the last purchase objection.", "n/a"]],
+      ideas: ["Wall-plan configurator by room dimensions", "Renter-safe install video series", "Landlord-approved one-pager", "Flat-pack for elevator buildings", "Creator collabs with apartment cat accounts", "Neutral colorway line for design renters"],
+      sourcing: ["Flat-pack birch ply from two domestic CNC shops; $19–$28 per shelf at 300-unit runs.", "Adhesive mount hardware sourced from an industrial supplier at $2.40 per mount, load-tested to 40 lb.", "Flat-pack shipping keeps dimensional weight under the profitability threshold — assembled units do not."],
+      risks: [["Medium", "Adhesive failure is a liability and a review-destroying event; over-engineer the mount."], ["Medium", "Furniture returns are expensive; flat-pack helps but does not eliminate it."], ["Low", "Urban rental cat ownership continues to climb."]],
+      sources: [["Keyword expansion, 31-term set", "today"], ["Etsy + DTC listing scrape (288 listings)", "yesterday"], ["CNC shop quotes", "5 days ago"], ["TikTok hashtag volume trend", "today"], ["Adhesive mount load testing spec", "1 week ago"]] },
+    { name: "Pet anxiety data & wearables resale", teaser: "Owners buy trackers, then get no interpretation; the software layer on top of existing hardware is unbuilt.", demand: 62, revenue: "$8k/mo", revenueNote: "yr-1 realistic",
+      thesis: "The hardware is commoditized and the data is inert. A subscription that reads existing tracker output for anxiety and pain signals sells against a problem owners already paid to measure.",
+      metrics: [["Demand", "62"], ["Competition", "21"], ["Rev. potential", "$8k/mo"], ["Confidence", "Medium"]],
+      trend: [28, 32, 35, 39, 42, 40, 48, 52, 56, 59, 61, 65], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+104% search interest, 12 mo",
+      audience: "Owners of reactive or separation-anxious dogs who have already tried a trainer and a calming chew, and who own a tracker whose app tells them nothing actionable.",
+      audienceFacts: [["Median spend", "$9 / mo"], ["Retention", "9 mo average"], ["Where they are", "Reddit, trainer referral"]],
+      keywords: [["dog separation anxiety tracker", "4.6k/mo", "KD 13", "+87%"], ["is my dog stressed at home", "7.2k/mo", "KD 11", "+52%"], ["dog activity data meaning", "1.9k/mo", "KD 7", "+61%"], ["pet camera anxiety detection", "2.4k/mo", "KD 15", "+73%"]],
+      competitors: [["Tracker manufacturers", "large", "Sell hardware, ship a step-counter app, and have no behavioral interpretation layer."], ["Training apps", "small", "Content-based, no data input. Cannot tell you whether the plan is working."], ["Vet behaviorists", "clinical", "$300 consults with a 6-week wait — the reason a $9/mo interpretation layer sells."]],
+      playbook: [["01", "Read existing hardware", "Import from the trackers owners already have. Zero hardware cost, instant addressable base.", "84% margin"], ["02", "Weekly anxiety report", "A plain-language weekly read plus one recommended change keeps the subscription alive.", "84% margin"], ["03", "Trainer partner tier", "Trainers pay for a multi-client dashboard and bring their own book of business.", "79% margin"]],
+      ideas: ["Weekly plain-language anxiety report", "Trainer multi-client dashboard", "Before/after intervention scoring", "Vet-shareable PDF summary", "Trigger-pattern detection by time of day", "Free tier reading one week of data"],
+      sourcing: ["No physical supply chain; cost is engineering plus per-account data processing at roughly $0.40/mo.", "Two major tracker platforms expose usable APIs; a third requires manual CSV import at launch.", "Behavioral scoring needs a credentialed advisor on retainer — budget $1,500/mo for defensibility."],
+      risks: [["High", "Platform dependency: a tracker maker closing its API removes a channel overnight."], ["Medium", "Behavioral claims invite the same scrutiny as health claims — keep language observational."], ["Medium", "Owner data literacy is low; onboarding has to do heavy lifting."]],
+      sources: [["Tracker API documentation review", "2 days ago"], ["Keyword set, anxiety cluster", "today"], ["r/dogs + r/reactivedogs mining", "yesterday"], ["Vet behaviorist pricing survey", "1 week ago"], ["App store review sentiment (4 apps)", "today"]] }
+  ],
+  "indie board games": [
+    { name: "Solo-mode expansions for existing hits", teaser: "Solo play is the fastest-growing segment, and most published games shipped without a solo mode.", demand: 74, revenue: "$16k/mo", revenueNote: "per campaign",
+      thesis: "A large installed base of owned games lacks solo rules. Licensed or original solo modules sell to people who already love the box on their shelf.",
+      metrics: [["Demand", "74"], ["Competition", "26"], ["Rev. potential", "$16k/mo"], ["Confidence", "High"]],
+      trend: [40, 44, 47, 52, 50, 57, 61, 66, 63, 70, 74, 79], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+87% search interest, 12 mo",
+      audience: "Hobbyists 28–45 with 30+ games and unreliable game nights. They buy on BGG reputation and crowdfunding, and they will pay $25 for 40 more hours out of a game they own.",
+      audienceFacts: [["Median spend", "$29 / module"], ["Repeat rate", "3.1 / yr"], ["Where they are", "BGG, Discord, Kickstarter"]],
+      keywords: [["solo variant rules", "8.9k/mo", "KD 14", "+66%"], ["best solo board games 2026", "12k/mo", "KD 31", "+38%"], ["automa deck expansion", "2.1k/mo", "KD 8", "+94%"], ["solo mode print and play", "3.3k/mo", "KD 10", "+71%"]],
+      competitors: [["Fan-made PDFs", "free", "Where the demand currently lives. Unbalanced, unillustrated, and impossible to find twice."], ["Two publishers", "mid-size", "Ship solo modes in new releases only; no back-catalogue support at all."], ["One automa designer", "est. $20k/campaign", "Proves willingness to pay; covers four games out of thousands."]],
+      playbook: [["01", "Licensed solo modules", "Revenue-share with publishers who have no solo roadmap. They get value from dormant IP.", "57% margin"], ["02", "Print-and-play first", "Validate demand digitally at $9 before committing to a print run.", "92% margin"], ["03", "Crowdfund the physical", "Pre-sell the deck; the PnP buyer list is the campaign's day-one audience.", "48% margin"]],
+      ideas: ["Print-and-play at $9 per module", "Difficulty-ladder campaign mode", "BGG designer diary series", "Discord playtest guild", "Publisher licensing outreach kit", "Solo-mode subscription, one module monthly"],
+      sourcing: ["Card printing at $1.85 per 54-card deck at 1,000 units from two Chinese printers; 30-day lead time.", "Illustration is the real cost — budget $1,200–$2,500 per module for a coherent visual identity.", "Fulfillment via a hobby-games 3PL keeps shipping credible with crowdfunding backers."],
+      risks: [["Medium", "Licensing negotiation is slow and relationship-driven; original IP is the fallback."], ["Medium", "Solo balance requires real playtesting volume or reviews will punish you."], ["Low", "Solo play growth has been consistent since 2020."]],
+      sources: [["BGG solo-guild activity analysis", "today"], ["Crowdfunding campaign outcomes (34 projects)", "yesterday"], ["Keyword set, solo cluster", "today"], ["Printer quote comparison", "6 days ago"], ["Publisher catalogue solo-mode audit", "3 days ago"]] },
+    { name: "Premium component upgrades", teaser: "Owners of a handful of beloved games will spend more on upgraded bits than the game cost.", demand: 67, revenue: "$13k/mo", revenueNote: "top-quartile store",
+      thesis: "A small set of evergreen titles has a durable owner base with real disposable income and no reliable source for high-quality replacement components.",
+      metrics: [["Demand", "67"], ["Competition", "35"], ["Rev. potential", "$13k/mo"], ["Confidence", "Medium"]],
+      trend: [42, 45, 43, 49, 53, 51, 57, 60, 58, 64, 66, 70], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+58% search interest, 12 mo",
+      audience: "Collectors who keep 5–10 games permanently and treat them as furniture. They buy metal coins, resin resources, and insert trays, and they show it off online.",
+      audienceFacts: [["Median spend", "$61 / order"], ["Repeat rate", "2.2 / yr"], ["Where they are", "BGG, Etsy, Instagram"]],
+      keywords: [["metal coins board game", "6.3k/mo", "KD 21", "+44%"], ["resin resource tokens", "2.7k/mo", "KD 12", "+68%"], ["game insert organizer", "9.1k/mo", "KD 26", "+31%"], ["upgraded components for", "4.4k/mo", "KD 9", "+52%"]],
+      competitors: [["Etsy 3D printers", "fragmented", "Print quality varies wildly; no game-specific fit guarantees, no brand."], ["Two upgrade brands", "est. $50k/mo", "Cover the top 10 titles only. Everything else is unserved."], ["Publisher deluxe editions", "premium", "Force a full re-buy at $150+ instead of a $40 upgrade — the gap you sell into."]],
+      playbook: [["01", "Title-specific kits", "One complete kit per game beats a generic token store on both search and conversion.", "63% margin"], ["02", "Pre-order production runs", "Batch by title on pre-order; zero dead inventory in a long-tail catalogue.", "66% margin"], ["03", "Reviewer seeding", "Unboxing coverage is the entire acquisition channel in this hobby.", "n/a"]],
+      ideas: ["Complete upgrade kit per title", "Pre-order batching by game", "Insert + component combined bundles", "Reviewer seeding program", "Community vote on the next title", "Collector's numbered runs"],
+      sourcing: ["Metal coin minting at $0.42/coin at 3,000 units; resin tokens $0.28 at 5,000 from two suppliers.", "Laser-cut inserts producible domestically at $6.20 per set, avoiding overseas lead time on bulky goods.", "Pre-order batching means working capital, not inventory risk, is the binding constraint."],
+      risks: [["Medium", "Copyright care needed: fit-compatible, never trade-dress-copying."], ["Medium", "Long-tail SKU sprawl can bury a small operator in catalogue maintenance."], ["Low", "Evergreen titles stay in print and in collections for a decade."]],
+      sources: [["Etsy sold-listing analysis", "today"], ["BGG top-100 ownership data", "yesterday"], ["Minting and resin supplier quotes", "4 days ago"], ["Keyword set, upgrade cluster", "today"], ["Reviewer channel reach audit", "1 week ago"]] },
+    { name: "Board game cafés outside major cities", teaser: "Library-model cafés are saturated downtown and almost absent in 50k–150k population towns.", demand: 59, revenue: "$31k/mo", revenueNote: "per location",
+      thesis: "The format is proven and the rent math only works outside the metro core — where competition is effectively zero.",
+      metrics: [["Demand", "59"], ["Competition", "14"], ["Rev. potential", "$31k/mo"], ["Confidence", "Medium"]],
+      trend: [33, 36, 40, 38, 44, 47, 45, 52, 55, 54, 58, 61], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+49% search interest, 12 mo",
+      audience: "Families and 20–35s in smaller cities with money and nothing to do on a Tuesday. Third-place demand with no alcohol requirement.",
+      audienceFacts: [["Spend per visit", "$18 / head"], ["Return rate", "2.4 visits / mo"], ["Where they are", "Local Facebook, word of mouth"]],
+      keywords: [["board game cafe near me", "27k/mo", "KD 24", "+36%"], ["things to do [town] evening", "high local", "KD 18", "+29%"], ["game library cafe", "1.8k/mo", "KD 9", "+41%"], ["kids birthday board game party", "3.1k/mo", "KD 13", "+55%"]],
+      competitors: [["Metro cafés", "established", "Saturated, high rent, and 40+ minutes away from your customer."], ["Local coffee shops", "many", "Close at 4pm and offer nothing to do — you are competing for evening hours they abandon."], ["Comic/game stores", "small", "Tournament-focused and unwelcoming to families; a different job entirely."]],
+      playbook: [["01", "Library fee + food", "$7 table fee plus food and drink; the library is the draw, F&B is the margin.", "68% F&B margin"], ["02", "Events fill weeknights", "Learn-to-play nights and leagues turn dead Tuesdays into the reliable base.", "n/a"], ["03", "Private parties", "Birthdays and team events at $340 per booking carry the slow months.", "74% margin"]],
+      ideas: ["Learn-to-play weeknight series", "Family birthday party packages", "Game library membership at $15/mo", "Local designer showcase nights", "School and library partnerships", "Retail shelf for the games people fall for"],
+      sourcing: ["Opening library of 300 titles at roughly $8,400 via distributor accounts, not retail.", "Secondary-market retail space at $14–$22/sq ft in target towns versus $48+ downtown.", "Espresso and light-kitchen fit-out lands near $60k used; the model does not need alcohol licensing."],
+      risks: [["High", "Single-location physical business with real capex and no remote optionality."], ["Medium", "Staff dependency: game-teaching quality is the product and it is hard to hire for."], ["Low", "Third-place demand in smaller cities has been under-supplied for years."]],
+      sources: [["Population and competitor mapping (72 towns)", "today"], ["Commercial rent comparables", "2 days ago"], ["Distributor library pricing", "5 days ago"], ["Local search volume analysis", "today"], ["Operating café P&L interviews", "1 week ago"]] }
+  ],
+  "field recording gear": [
+    { name: "Weatherproof rigs for nature recordists", teaser: "Long-deployment outdoor recording has real buyers and almost no purpose-built weatherproof kit.", demand: 66, revenue: "$9k/mo", revenueNote: "yr-1 realistic",
+      thesis: "Recordists solve rain, wind and multi-week power with tape and Tupperware. A purpose-built rig sells to a small, high-intent, cash-carrying audience.",
+      metrics: [["Demand", "66"], ["Competition", "17"], ["Rev. potential", "$9k/mo"], ["Confidence", "Medium"]],
+      trend: [31, 35, 33, 40, 44, 47, 45, 53, 57, 60, 63, 68], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+79% search interest, 12 mo",
+      audience: "Nature recordists, bioacoustics researchers and sound designers deploying recorders for days or weeks. Technical, forum-driven, and unbothered by price when the gear survives.",
+      audienceFacts: [["Median spend", "$310 / order"], ["Repeat rate", "1.4 / yr"], ["Where they are", "Forums, university labs"]],
+      keywords: [["weatherproof field recorder case", "2.2k/mo", "KD 8", "+72%"], ["long term audio deployment power", "1.4k/mo", "KD 6", "+88%"], ["wind protection outdoor mic", "4.1k/mo", "KD 14", "+43%"], ["bioacoustics recorder enclosure", "760/mo", "KD 4", "+61%"]],
+      competitors: [["Recorder manufacturers", "large", "Sell the box, not the deployment. Accessories stop at a foam windscreen."], ["Two research suppliers", "institutional", "Priced for grant budgets at 3x, with procurement friction and 8-week lead times."], ["DIY forum builds", "free", "Detailed threads proving the demand and the absence of any product."]],
+      playbook: [["01", "Deployment kit per recorder", "Enclosure, mount, wind protection and power sized to specific popular recorders.", "58% margin"], ["02", "Sell to labs directly", "University bioacoustics groups buy in multiples and re-order annually.", "62% margin"], ["03", "Consumable wind covers", "Fur covers wear out on schedule — a small recurring revenue line.", "70% margin"]],
+      ideas: ["Recorder-specific deployment kits", "Solar power extension module", "Field-tested deployment logbook content", "University lab bulk pricing", "Wind-cover replacement subscription", "Recordist-authored deployment guides"],
+      sourcing: ["IP66 enclosures modifiable from stock at $18–$34; custom gasketing adds $4 per unit.", "Acoustically transparent membrane is the hard part — one European supplier, 6-week lead, sample first.", "Small-batch assembly is viable in-house below 200 units/month; margins support it."],
+      risks: [["High", "Small total market; realistic ceiling is a strong one-person business, not a scaling company."], ["Medium", "Membrane single-sourcing is a genuine supply risk — qualify a second vendor early."], ["Low", "Bioacoustics research funding continues to expand."]],
+      sources: [["Forum build-thread mining (140 threads)", "today"], ["University lab procurement survey", "3 days ago"], ["Enclosure supplier quotes", "5 days ago"], ["Keyword set, deployment cluster", "today"], ["Research supplier price comparison", "1 week ago"]] },
+    { name: "Curated sound libraries for game audio", teaser: "Game teams need specific, cleared, consistent libraries; marketplaces sell inconsistent one-off packs.", demand: 72, revenue: "$14k/mo", revenueNote: "yr-2 realistic",
+      thesis: "Buyers want coherence and clean licensing, not volume. A tightly curated library with unambiguous commercial terms outsells a bigger, messier catalogue.",
+      metrics: [["Demand", "72"], ["Competition", "39"], ["Rev. potential", "$14k/mo"], ["Confidence", "High"]],
+      trend: [45, 48, 52, 50, 56, 60, 64, 62, 69, 73, 71, 78], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+69% search interest, 12 mo",
+      audience: "Indie game audio leads and solo developers on a deadline who need forty consistent footstep variations today, with a license their publisher will accept.",
+      audienceFacts: [["Median spend", "$89 / pack"], ["Repeat rate", "2.8 / yr"], ["Where they are", "Discord, GDC, itch.io"]],
+      keywords: [["game footstep sound library", "3.6k/mo", "KD 17", "+54%"], ["royalty free sfx commercial license", "8.4k/mo", "KD 29", "+38%"], ["consistent foley library", "1.3k/mo", "KD 7", "+81%"], ["ambience loops seamless", "5.2k/mo", "KD 20", "+46%"]],
+      competitors: [["Large marketplaces", "dominant", "Inconsistent recording conditions across contributors; license terms confuse buyers."], ["Boutique libraries", "small", "Excellent audio, terrible discoverability and no game-specific organization."], ["Subscription services", "mid", "All-you-can-eat, but stop billing and your shipped game's rights get murky."]],
+      playbook: [["01", "Perpetual clear license", "One-time purchase, unambiguous commercial rights. Directly answers the subscription anxiety.", "88% margin"], ["02", "Game-shaped organization", "Sell by need — footsteps, UI, weather — not by recording session.", "88% margin"], ["03", "Studio site licenses", "Team-wide terms at $1,200 turn one buyer into a whole studio.", "92% margin"]],
+      ideas: ["Naming convention and metadata standard", "Free starter pack as the funnel", "Middleware-ready session templates", "Studio site licensing", "Jam sponsorships for distribution", "Custom recording commissions"],
+      sourcing: ["No goods; cost is recording time plus editing at roughly 3:1 hours to delivered minute.", "Delivery via a standard digital storefront keeps overhead near zero and margins above 85%.", "Legal review of the license text is the one expense worth paying for properly — budget $2,000."],
+      risks: [["Medium", "AI-generated audio may compress the low end of this market within two years."], ["Medium", "Discoverability outside marketplaces requires sustained community presence."], ["Low", "Indie game output keeps growing and every game needs audio."]],
+      sources: [["Marketplace catalogue and pricing audit", "today"], ["Game audio Discord sentiment", "yesterday"], ["License term comparison (7 vendors)", "4 days ago"], ["Keyword set, SFX cluster", "today"], ["itch.io release volume trend", "2 days ago"]] },
+    { name: "Repair & recalibration for legacy recorders", teaser: "A decade of beloved discontinued recorders is aging out, and manufacturers stopped servicing them.", demand: 55, revenue: "$7k/mo", revenueNote: "one-operator ceiling",
+      thesis: "Owners will pay to keep gear they trust rather than re-buy. Service demand is rising exactly as official support disappears.",
+      metrics: [["Demand", "55"], ["Competition", "12"], ["Rev. potential", "$7k/mo"], ["Confidence", "High"]],
+      trend: [29, 33, 31, 38, 41, 44, 42, 48, 51, 54, 53, 58], trendStart: "Sep 2025", trendEnd: "Aug 2026", trendNote: "+66% search interest, 12 mo",
+      audience: "Working recordists and podcasters with a recorder they have used for eight years and refuse to replace, plus schools with aging equipment budgets.",
+      audienceFacts: [["Median ticket", "$145 / repair"], ["Repeat rate", "1.2 / yr"], ["Where they are", "Forums, local referral"]],
+      keywords: [["repair discontinued field recorder", "1.6k/mo", "KD 5", "+74%"], ["xlr input repair cost", "2.4k/mo", "KD 8", "+41%"], ["recorder preamp noise fix", "1.1k/mo", "KD 6", "+58%"], ["replacement battery door", "890/mo", "KD 3", "+36%"]],
+      competitors: [["Manufacturer service", "official", "Refuses out-of-warranty legacy models by policy — the reason this exists."], ["Generic electronics shops", "local", "No audio-specific calibration capability; customers do not trust them with a preamp."], ["One specialist shop", "est. $8k/mo", "Six-week backlog and no online booking. The demand overflow is visible in forum posts."]],
+      playbook: [["01", "Flat-rate mail-in repair", "Published pricing by fault type removes the quote friction that loses jobs.", "64% margin"], ["02", "Parts harvesting", "Buy dead units for donor parts; the cheapest inventory in the business.", "78% margin"], ["03", "Institutional contracts", "School and university AV departments on annual servicing agreements.", "58% margin"]],
+      ideas: ["Flat-rate published repair menu", "Online booking with turnaround guarantee", "Repair teardown content per model", "Refurbished units with a warranty", "3D-printed replacement doors and clips", "Institutional annual service plans"],
+      sourcing: ["Donor units regularly available under $60; set marketplace alerts by model.", "Common failure parts (jacks, encoders, doors) sourceable at $2–$14 or 3D-printable in-house.", "Calibration equipment is a one-time $2,800 investment and the actual barrier to entry."],
+      risks: [["Medium", "Skill-gated and time-bound: revenue scales with your hands, not your marketing."], ["Medium", "Parts availability degrades over time for the oldest models."], ["Low", "The installed base of trusted legacy gear is large and aging into service."]],
+      sources: [["Forum repair-request mining", "today"], ["Marketplace dead-unit pricing", "yesterday"], ["Manufacturer service policy review", "3 days ago"], ["Keyword set, repair cluster", "today"], ["Specialist shop backlog signals", "1 week ago"]] }
+  ]
+};
+
+const GENERIC_LOCKED = ["Competition score", "Keyword clusters", "Competitor gaps", "Sourcing notes", "Trend data", "Risk profile"];
+
+class Component extends DCLogic {
+  state = {
+    screen: "landing", query: "", input: "",
+    searching: false, statusIdx: 0,
+    signedIn: false, credits: 2, email: "", password: "",
+    showAuth: false, showPaywall: false,
+    pendingNiche: null, activeNiche: null, activeMarket: null, unlocked: []
+  };
+
+  statuses = [
+    "Reading live search demand across 14 sources\u2026",
+    "Scanning 612 marketplace listings for supply gaps\u2026",
+    "Weighing community chatter from the last 90 days\u2026",
+    "Scoring underserved niches \u00b7 evidence attached"
+  ];
+
+  componentWillUnmount() { clearInterval(this._t); }
+
+  runSearch(q) {
+    clearInterval(this._t);
+    this.setState({ screen: "results", query: q, searching: true, statusIdx: 0 });
+    this._t = setInterval(() => {
+      this.setState(s => {
+        const next = s.statusIdx + 1;
+        if (next >= this.statuses.length - 1) { clearInterval(this._t); return { statusIdx: this.statuses.length - 1, searching: false }; }
+        return { statusIdx: next };
+      });
+    }, 850);
+  }
+
+  marketKey(q) {
+    const k = ((q != null ? q : this.state.query) || "").trim().toLowerCase();
+    return DATA[k] ? k : "home coffee equipment";
+  }
+
+  niches(q) { return DATA[this.marketKey(q)]; }
+
+  reveal(i) {
+    const mk = this.marketKey();
+    const key = mk + ":" + i;
+    if (!this.state.signedIn) { this.setState({ showAuth: true, pendingNiche: i }); return; }
+    if (this.state.unlocked.indexOf(key) >= 0) { this.setState({ screen: "report", activeNiche: i, activeMarket: mk }); return; }
+    if (this.state.credits <= 0) { this.setState({ showPaywall: true, pendingNiche: i }); return; }
+    this.setState(s => ({ credits: s.credits - 1, unlocked: s.unlocked.concat([key]), screen: "report", activeNiche: i, activeMarket: mk, showAuth: false, showPaywall: false }));
+  }
+
+  renderVals() {
+    const s = this.state;
+    const mk = this.marketKey();
+    const list = this.niches();
+    const reportMarket = s.activeMarket || mk;
+    const reportList = DATA[reportMarket];
+    const reportIdx = s.activeNiche == null ? 0 : s.activeNiche;
+    const r = reportList[reportIdx];
+    const trendMax = Math.max.apply(null, r.trend);
+
+    return {
+      isLanding: s.screen === "landing", isResults: s.screen === "results",
+      isReport: s.screen === "report", isDashboard: s.screen === "dashboard",
+      signedIn: s.signedIn, signedOut: !s.signedIn,
+      credits: s.credits, creditsLabel: s.credits + " report " + (s.credits === 1 ? "credit" : "credits"),
+      query: s.input, email: s.email, password: s.password,
+      showAuth: s.showAuth, showPaywall: s.showPaywall,
+      setQuery: e => this.setState({ input: e.target.value }),
+      setEmail: e => this.setState({ email: e.target.value }),
+      setPassword: e => this.setState({ password: e.target.value }),
+      submitSearch: e => { e.preventDefault(); this.runSearch(s.input.trim() || "home coffee equipment"); },
+      goHome: () => this.setState({ screen: "landing" }),
+      goPricing: () => { this.setState({ screen: "landing" }); setTimeout(() => { const el = document.getElementById("pricing"); if (el) window.scrollTo({ top: el.offsetTop - 70, behavior: "smooth" }); }, 60); },
+      goDashboard: () => this.setState({ screen: "dashboard" }),
+      backToResults: () => this.setState({ screen: "results" }),
+      openAuth: () => this.setState({ showAuth: true }),
+      openPaywall: () => this.setState({ showPaywall: true, pendingNiche: null }),
+      closeModals: () => this.setState({ showAuth: false, showPaywall: false }),
+      stop: e => e.stopPropagation(),
+      submitAuth: e => {
+        if (e && e.preventDefault) e.preventDefault();
+        this.setState({ signedIn: true, showAuth: false }, () => {
+          if (s.pendingNiche != null) this.reveal(s.pendingNiche);
+        });
+      },
+
+      examples: ["home coffee equipment", "pet wellness", "indie board games", "field recording gear"].map(l => ({ label: l, pick: () => this.setState({ input: l }, () => this.runSearch(l)) })),
+
+      stats: [
+        { value: "14", label: "Live sources read per scout \u2014 search, marketplaces, forums, job posts" },
+        { value: "90s", label: "Median time from a broad topic to four scored niches" },
+        { value: "612", label: "Listings parsed per market to measure real supply, not guesses" },
+        { value: "2", label: "Full reports free on every new account \u2014 no card, no subscription" }
+      ],
+      steps: [
+        { num: "01", title: "You give a broad topic", body: "An industry, a hobby, a category \u2014 \"home coffee equipment\" is enough. No keyword lists to prepare." },
+        { num: "02", title: "We search live, not from memory", body: "Demand data, marketplace listings, community threads and hiring signals are pulled fresh at the moment you ask." },
+        { num: "03", title: "You get scored niches with receipts", body: "Each one carries demand, competition and revenue potential \u2014 plus the keyword, competitor and sourcing evidence behind the score." }
+      ],
+      plans: [
+        { name: "Free", tag: "start here", price: "$0", period: "forever", reports: "2 full reports included", features: ["Unlimited searching and scoring", "2 full reports, kept forever", "Evidence and source links"], cta: "Create account", btnBg: "transparent", btnFg: "#13171f", action: () => this.setState({ showAuth: true }) },
+        { name: "Single report", tag: "pay as you go", price: "$5", period: "one report", reports: "$5.00 each", features: ["One full report, kept forever", "Every section and source link", "CSV export", "No commitment"], cta: "Buy one report", btnBg: "transparent", btnFg: "#13171f", action: () => this.setState({ showPaywall: true, pendingNiche: null }) },
+        { name: "Report pack", tag: "most popular", price: "$15", period: "5 reports", reports: "$3.00 each \u00b7 save 40%", features: ["5 credits, never expire", "Saved markets and re-scout", "CSV export", "Nothing renews"], cta: "Buy 5 reports", btnBg: "#13171f", btnFg: "#f6f7f9", action: () => this.setState({ showPaywall: true, pendingNiche: null }) },
+        { name: "Deep dive pack", tag: "best value", price: "$30", period: "12 reports", reports: "$2.50 each \u00b7 save 50%", features: ["12 credits, never expire", "Everything in the report pack", "Client-ready PDF export", "Share with 2 teammates"], cta: "Buy 12 reports", btnBg: "transparent", btnFg: "#13171f", action: () => this.setState({ showPaywall: true, pendingNiche: null }) }
+      ],
+      paywallOptions: [
+        { name: "Single report", detail: "Unlock one niche, keep it forever", price: "$5", border: "#dfe3ea", action: () => { const i = s.pendingNiche; this.setState(st => ({ credits: st.credits + 1, showPaywall: false }), () => { if (i != null) this.reveal(i); }); } },
+        { name: "Report pack \u2014 5 reports", detail: "$3.00 each \u00b7 credits never expire", price: "$15", border: "#13171f", action: () => { const i = s.pendingNiche; this.setState(st => ({ credits: st.credits + 5, showPaywall: false }), () => { if (i != null) this.reveal(i); }); } },
+        { name: "Deep dive pack \u2014 12 reports", detail: "$2.50 each \u00b7 PDF export, 2 teammates", price: "$30", border: "#dfe3ea", action: () => { const i = s.pendingNiche; this.setState(st => ({ credits: st.credits + 12, showPaywall: false }), () => { if (i != null) this.reveal(i); }); } }
+      ],
+      paywallEyebrow: s.pendingNiche != null && s.credits <= 0 ? "Free reports used" : "Add report credits",
+      paywallTitle: s.pendingNiche != null && s.credits <= 0 ? "Keep going for the price of a coffee." : "Top up whenever you need more.",
+      paywallNiche: s.pendingNiche != null && s.credits <= 0
+        ? "You're opening " + list[s.pendingNiche].name + ". Both free reports are already used."
+        : s.credits + " report " + (s.credits === 1 ? "credit" : "credits") + " left on your account \u2014 add more below.",
+
+      resultsHeading: s.query ? "Underserved corners of " + s.query : "Underserved corners",
+      resultCount: list.length + " niches scored",
+      statusLine: s.statusIdx === this.statuses.length - 1
+        ? "Scored " + list.length + " underserved " + (list.length === 1 ? "niche" : "niches") + " \u00b7 evidence attached"
+        : this.statuses[s.statusIdx],
+      statusDot: s.searching ? "#c9522b" : "#1f6f4a",
+
+      niches: list.map((n, i) => {
+        const owned = s.unlocked.indexOf(mk + ":" + i) >= 0;
+        return {
+          rank: "Niche " + String(i + 1).padStart(2, "0"),
+          name: n.name, teaser: n.teaser, demand: n.demand, demandPct: n.demand + "%",
+          revenue: n.revenue, revenueNote: n.revenueNote,
+          locked: GENERIC_LOCKED.slice(0, 4).map(l => l + " \u00b7 locked"),
+          stateLabel: owned ? "Unlocked" : "Preview",
+          stateFg: owned ? "#1f6f4a" : "#6b7280",
+          stateBg: owned ? "#eef4f0" : "#f6f7f9",
+          revealLabel: owned ? "Open full report \u2192" : (s.signedIn ? (s.credits > 0 ? "Reveal full report \u00b7 uses 1 credit" : "Reveal full report \u00b7 $5") : "Sign up to reveal full report"),
+          reveal: () => this.reveal(i)
+        };
+      }),
+
+      report: {
+        name: r.name, thesis: r.thesis,
+        metrics: r.metrics.map(m => ({ label: m[0], value: m[1] })),
+        trend: r.trend.map(v => ({ h: Math.round((v / trendMax) * 100) + "%" })),
+        trendStart: r.trendStart, trendEnd: r.trendEnd, trendNote: r.trendNote,
+        audience: r.audience,
+        audienceFacts: r.audienceFacts.map(a => ({ k: a[0], v: a[1] })),
+        keywords: r.keywords.map(k => ({ term: k[0], vol: k[1], kd: k[2], growth: k[3] })),
+        competitors: r.competitors.map(c => ({ name: c[0], scale: c[1], gap: c[2] })),
+        playbook: r.playbook.map(p => ({ num: p[0], title: p[1], body: p[2], margin: p[3] })),
+        ideas: r.ideas, sourcing: r.sourcing,
+        risks: r.risks.map(x => ({ level: x[0], body: x[1] })),
+        sources: r.sources.map(x => ({ title: x[0], when: x[1] }))
+      },
+      reportDate: "11 Aug 2026",
+      reportQuery: reportMarket,
+
+      accountEmail: s.email || "you@company.com",
+      openedCount: s.unlocked.length,
+      hasUnlocked: s.unlocked.length > 0,
+      noUnlocked: s.unlocked.length === 0,
+      unlockedList: s.unlocked.map(key => {
+        const parts = key.split(":");
+        const m = parts[0], i = parseInt(parts[1], 10);
+        return {
+          name: DATA[m][i].name, query: m, date: "11 Aug 2026",
+          open: () => this.setState({ screen: "report", activeNiche: i, activeMarket: m })
+        };
+      })
+    };
+  }
+}
+
+</script>
+</body>
+</html>
