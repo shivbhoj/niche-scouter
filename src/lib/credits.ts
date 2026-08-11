@@ -21,18 +21,25 @@ export type UnlockResult =
   | { ok: false; reason: "no_credits" };
 
 export async function unlockNiche(userId: string, nicheId: string): Promise<UnlockResult> {
-  const existing = await db.unlock.findUnique({
-    where: { userId_nicheId: { userId, nicheId } },
+  return db.$transaction(async (tx) => {
+    const existing = await tx.unlock.findUnique({
+      where: { userId_nicheId: { userId, nicheId } },
+    });
+    if (existing) return { ok: true, alreadyOwned: true };
+
+    // Guard the decrement with credits > 0 in the same conditional update so
+    // concurrent unlocks of *different* niches can't both pass a stale read
+    // and drive the balance negative — SQLite serializes writers, so the
+    // second transaction's updateMany sees the first's committed decrement
+    // and correctly reports zero rows affected.
+    const spent = await tx.user.updateMany({
+      where: { id: userId, credits: { gt: 0 } },
+      data: { credits: { decrement: 1 } },
+    });
+    if (spent.count === 0) return { ok: false, reason: "no_credits" };
+
+    await tx.creditTxn.create({ data: { userId, delta: -1, reason: "spend:unlock" } });
+    await tx.unlock.create({ data: { userId, nicheId } });
+    return { ok: true, alreadyOwned: false };
   });
-  if (existing) return { ok: true, alreadyOwned: true };
-
-  const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
-  if (user.credits <= 0) return { ok: false, reason: "no_credits" };
-
-  await db.$transaction([
-    db.user.update({ where: { id: userId }, data: { credits: { decrement: 1 } } }),
-    db.creditTxn.create({ data: { userId, delta: -1, reason: "spend:unlock" } }),
-    db.unlock.create({ data: { userId, nicheId } }),
-  ]);
-  return { ok: true, alreadyOwned: false };
 }

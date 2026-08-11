@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe, isPlanId } from "@/lib/stripe";
 import { grantCredits, unlockNiche } from "@/lib/credits";
 import { db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/current-user";
 
 // Best-effort synchronous confirmation for the redirect-back UX. The
 // Stripe webhook is the source of truth (works even if the user closes
@@ -23,6 +24,14 @@ export async function GET(req: NextRequest) {
   const meta = session.metadata ?? {};
   const userId = meta.userId;
   const plan = meta.plan;
+
+  // Require the browser completing checkout to be signed in as the same
+  // account the session was created for. The webhook remains the source
+  // of truth for crediting regardless, so a mismatch here just skips the
+  // synchronous grant/redirect rather than silently crediting whoever
+  // happens to land on this URL with someone else's session id.
+  const currentUser = await getCurrentUser();
+  if (currentUser?.id !== userId) return NextResponse.redirect(`${appUrl}/dashboard`);
 
   if (session.payment_status === "paid" && userId && plan && isPlanId(plan)) {
     const credits = Number(meta.credits ?? 0);

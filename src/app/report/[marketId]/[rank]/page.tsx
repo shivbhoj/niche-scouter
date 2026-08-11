@@ -12,6 +12,7 @@ export default async function ReportPage({
 }) {
   const { marketId, rank: rankStr } = await params;
   const rank = Number(rankStr);
+  if (!Number.isInteger(rank)) redirect("/");
 
   const market = await db.market.findUnique({ where: { id: marketId } });
   if (!market) redirect("/");
