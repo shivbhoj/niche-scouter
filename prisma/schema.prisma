@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  credits      Int          @default(2)
+  createdAt    DateTime     @default(now())
+  unlocks      Unlock[]
+  creditTxns   CreditTxn[]
+}
+
+// One row per distinct topic a user has scouted. Acts as a cache so
+// re-searching the same topic doesn't re-spend AI/search calls.
+model Market {
+  id         String   @id @default(cuid())
+  query      String   @unique
+  status     String   @default("pending") // pending | ready | error
+  errorMsg   String?
+  createdAt  DateTime @default(now())
+  niches     Niche[]
+}
+
+model Niche {
+  id          String   @id @default(cuid())
+  marketId    String
+  market      Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  rank        Int
+  name        String
+  teaser      String
+  demand      Int
+  revenue     String
+  revenueNote String
+  reportJson  String
+  unlocks     Unlock[]
+
+  @@unique([marketId, rank])
+}
+
+model Unlock {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nicheId   String
+  niche     Niche    @relation(fields: [nicheId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, nicheId])
+}
+
+model CreditTxn {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  delta           Int
+  reason          String
+  stripeSessionId String?  @unique
+  createdAt       DateTime @default(now())
+}

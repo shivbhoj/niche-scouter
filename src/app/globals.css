@@ -1,0 +1,87 @@
+:root {
+  --bg: #f6f7f9;
+  --bg-alt: #edeff4;
+  --ink: #13171f;
+  --ink-soft: #454b57;
+  --muted: #6b7280;
+  --muted-2: #a3aab8;
+  --hairline: #dfe3ea;
+  --hairline-soft: #e8ebf1;
+  --hairline-hover: #c6ccd8;
+  --white: #ffffff;
+  --demand-track: #e8ebf1;
+  --ok-fg: #1f6f4a;
+  --ok-bg: #eef4f0;
+  --live-dot: #c9522b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  font-family:
+    var(--font-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--muted);
+}
+
+input,
+button,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.serif {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+.mono {
+  font-family: var(--font-mono), monospace;
+}
+
+.btn-hover:hover {
+  opacity: 0.85;
+}
+
+.chip-hover:hover {
+  border-color: var(--ink) !important;
+  color: var(--ink) !important;
+}
+
+.card-hover:hover {
+  border-color: var(--hairline-hover) !important;
+}
+
+.row-hover:hover {
+  background: var(--bg-alt) !important;
+}
+
+.opt-hover:hover {
+  border-color: var(--ink) !important;
+}
