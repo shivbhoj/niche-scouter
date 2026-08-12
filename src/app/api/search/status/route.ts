@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { STALE_PENDING_MS } from "@/lib/ai/generate-market";
 
 export async function GET(req: NextRequest) {
   const marketId = req.nextUrl.searchParams.get("marketId");
@@ -25,10 +26,18 @@ export async function GET(req: NextRequest) {
       )
     : new Set<string>();
 
+  // Surface a lost generation as a terminal state so the client stops
+  // polling and can offer a retry, instead of spinning forever.
+  const stranded =
+    market.status === "pending" &&
+    Date.now() - market.updatedAt.getTime() > STALE_PENDING_MS;
+
   return NextResponse.json({
-    status: market.status,
+    status: stranded ? "error" : market.status,
     query: market.query,
-    errorMsg: market.errorMsg,
+    errorMsg: stranded
+      ? "This scout timed out. Search the topic again to retry."
+      : market.errorMsg,
     niches: market.niches.map((n) => ({
       id: n.id,
       rank: n.rank,

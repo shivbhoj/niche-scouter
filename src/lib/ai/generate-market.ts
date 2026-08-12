@@ -7,6 +7,21 @@ import type { NicheReportContent } from "@/lib/types";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
 
+/**
+ * Live research with web search is slow, but not unbounded — without a
+ * ceiling a hung request leaves the market "pending" forever and the
+ * client polls it indefinitely.
+ */
+const GENERATION_TIMEOUT_MS = 3 * 60 * 1000;
+
+/**
+ * A market still "pending" after this long has almost certainly lost its
+ * generation task (process restart, deploy, crash between the DB write
+ * and the AI call finishing). Treat it as retryable rather than letting
+ * it hang forever.
+ */
+export const STALE_PENDING_MS = 5 * 60 * 1000;
+
 const SYSTEM_PROMPT = `You are Niche Scouter's research engine. Given a broad industry or hobby topic, you use live web search to find real, underserved sub-niches within it — small, specific opportunities where demand outpaces the quality or attention of existing sellers/creators/businesses.
 
 For each niche you report on, ground your scoring and evidence in what you actually find through search: real competitor names or types, real keyword-shaped search phrases, plausible pricing and sourcing informed by what's genuinely available. Do not fabricate specific company names you have no basis for — prefer descriptive competitor categories ("Two Etsy makers", "One regional roaster") unless you found a real, named company via search.
@@ -56,18 +71,21 @@ async function generateViaAi(query: string): Promise<NicheReportContent[]> {
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
   const client = new Anthropic({ apiKey });
 
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 8000,
-    system: SYSTEM_PROMPT,
-    tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 10 }],
-    messages: [
-      {
-        role: "user",
-        content: `Broad topic: "${query}"\n\nResearch this live and return the JSON object described in your instructions.`,
-      },
-    ],
-  });
+  const response = await client.messages.create(
+    {
+      model: MODEL,
+      max_tokens: 8000,
+      system: SYSTEM_PROMPT,
+      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 10 }],
+      messages: [
+        {
+          role: "user",
+          content: `Broad topic: "${query}"\n\nResearch this live and return the JSON object described in your instructions.`,
+        },
+      ],
+    },
+    { timeout: GENERATION_TIMEOUT_MS }
+  );
 
   const text = response.content
     .filter((b): b is Anthropic.TextBlock => b.type === "text")
@@ -84,6 +102,9 @@ function generateViaSeed(query: string): NicheReportContent[] | null {
   return seed.map((n) => fromSeed(n));
 }
 
+/** Raised for problems whose text is safe to show an end user. */
+class UserFacingError extends Error {}
+
 export async function generateMarket(marketId: string, query: string) {
   try {
     let niches: NicheReportContent[] | null = null;
@@ -93,8 +114,8 @@ export async function generateMarket(marketId: string, query: string) {
     } else {
       niches = generateViaSeed(query);
       if (!niches) {
-        throw new Error(
-          "Live search needs ANTHROPIC_API_KEY. Set it in .env, or try one of the example topics on the homepage."
+        throw new UserFacingError(
+          "Live search isn't configured on this deployment, so only the example topics are available."
         );
       }
     }
@@ -117,9 +138,20 @@ export async function generateMarket(marketId: string, query: string) {
       db.market.update({ where: { id: marketId }, data: { status: "ready" } }),
     ]);
   } catch (err) {
+    // `errorMsg` is served to anonymous clients by /api/search/status, so
+    // only deliberately-written copy goes in it. Raw provider errors and
+    // Zod parse dumps can carry request details and internal shape, so
+    // they stay in the server log.
+    console.error(`[generateMarket] failed for query=${JSON.stringify(query)}`, err);
     await db.market.update({
       where: { id: marketId },
-      data: { status: "error", errorMsg: err instanceof Error ? err.message : String(err) },
+      data: {
+        status: "error",
+        errorMsg:
+          err instanceof UserFacingError
+            ? err.message
+            : "We couldn't finish scouting this market. Try again in a moment.",
+      },
     });
   }
 }

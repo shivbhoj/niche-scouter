@@ -26,7 +26,16 @@ export default async function ReportPage({
   const result = await unlockNiche(user.id, niche.id);
   if (!result.ok) redirect(`/results?market=${marketId}&reveal=${rank}&paywall=1`);
 
-  const content = JSON.parse(niche.reportJson) as NicheReportContent;
+  let content: NicheReportContent;
+  try {
+    content = JSON.parse(niche.reportJson) as NicheReportContent;
+  } catch (err) {
+    // Corrupt stored payload shouldn't 500 a user who just paid for it.
+    // The unlock above already succeeded, so the credit isn't lost —
+    // re-opening from the dashboard works once the row is repaired.
+    console.error(`[report] unparseable reportJson for niche=${niche.id}`, err);
+    redirect(`/results?market=${marketId}`);
+  }
   const report: NicheReport = { id: niche.id, rank: niche.rank, ...content };
 
   return <ReportView report={report} query={market.query} marketId={marketId} />;

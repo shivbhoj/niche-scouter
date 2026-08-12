@@ -25,6 +25,9 @@ model Market {
   status     String   @default("pending") // pending | ready | error
   errorMsg   String?
   createdAt  DateTime @default(now())
+  // Used to detect generations that died mid-flight and are stuck
+  // "pending" — see STALE_PENDING_MS.
+  updatedAt  DateTime @updatedAt
   niches     Niche[]
 }
 

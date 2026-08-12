@@ -2,6 +2,8 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { authLimiter, clientKey } from "@/lib/rate-limit";
+import { validateCredentials } from "@/lib/credentials";
 
 // Single form handles both signup and sign-in, mirroring the design's
 // one-step "create account & unlock" modal: unknown emails are provisioned
@@ -17,10 +19,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: {},
         password: {},
       },
-      async authorize(raw) {
-        const email = String(raw?.email ?? "").trim().toLowerCase();
-        const password = String(raw?.password ?? "");
-        if (!email || !password || password.length < 6) return null;
+      async authorize(raw, request) {
+        const parsed = validateCredentials(raw?.email, raw?.password);
+        if (!parsed) return null;
+        const { email, password } = parsed;
+
+        // Throttle by source address so a stolen email list can't be
+        // walked against this endpoint at speed.
+        const limit = authLimiter.check(`auth:${clientKey(request)}`);
+        if (!limit.ok) return null;
 
         const existing = await db.user.findUnique({ where: { email } });
 

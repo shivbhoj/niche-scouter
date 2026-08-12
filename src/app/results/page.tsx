@@ -23,6 +23,10 @@ const STATUSES = [
 
 const GENERIC_LOCKED = ["Competition score", "Keyword clusters", "Competitor gaps", "Sourcing notes"];
 
+const POLL_INTERVAL_MS = 900;
+/** Slightly beyond the server's own generation ceiling. */
+const POLL_TIMEOUT_MS = 4 * 60 * 1000;
+
 export default function ResultsPage() {
   return (
     <Suspense fallback={null}>
@@ -62,13 +66,27 @@ function ResultsView() {
       }
       const q = qParam?.trim() || "home coffee equipment";
       setQuery(q);
-      const res = await fetch("/api/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: q }),
-      });
-      const data = await res.json();
-      if (!cancelled) setMarketId(data.marketId);
+      try {
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: q }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (!res.ok) {
+          // Includes 429 from the new-scout rate limit, whose message
+          // explains that previously scouted topics still work.
+          setStatus("error");
+          setErrorMsg(data?.error ?? "Couldn't start this scout. Try again in a moment.");
+          return;
+        }
+        setMarketId(data.marketId);
+      } catch {
+        if (cancelled) return;
+        setStatus("error");
+        setErrorMsg("Couldn't reach the server. Check your connection and try again.");
+      }
     }
     void start();
     return () => {
@@ -76,23 +94,40 @@ function ResultsView() {
     };
   }, [qParam, marketParam]);
 
-  // Poll for status/niches.
+  // Poll for status/niches. Bounded: a generation that never resolves
+  // must not leave the tab polling this endpoint indefinitely.
   useEffect(() => {
     if (!marketId) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
+    const deadline = Date.now() + POLL_TIMEOUT_MS;
 
     async function poll() {
-      const res = await fetch(`/api/search/status?marketId=${marketId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      if (cancelled) return;
-      setQuery(data.query);
-      setStatus(data.status);
-      setErrorMsg(data.errorMsg ?? null);
-      setNiches(data.niches);
-      if (data.status === "pending") {
-        timer = setTimeout(poll, 900);
+      try {
+        const res = await fetch(`/api/search/status?marketId=${marketId}`);
+        if (!res.ok) throw new Error(String(res.status));
+        const data = await res.json();
+        if (cancelled) return;
+        setQuery(data.query);
+        setStatus(data.status);
+        setErrorMsg(data.errorMsg ?? null);
+        setNiches(data.niches);
+        if (data.status !== "pending") return;
+        if (Date.now() > deadline) {
+          setStatus("error");
+          setErrorMsg("This scout is taking longer than expected. Search the topic again to retry.");
+          return;
+        }
+        timer = setTimeout(poll, POLL_INTERVAL_MS);
+      } catch {
+        if (cancelled) return;
+        // Transient network/server blip — keep trying until the deadline.
+        if (Date.now() > deadline) {
+          setStatus("error");
+          setErrorMsg("Lost connection while scouting. Search the topic again to retry.");
+          return;
+        }
+        timer = setTimeout(poll, POLL_INTERVAL_MS);
       }
     }
     void poll();

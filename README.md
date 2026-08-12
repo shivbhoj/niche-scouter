@@ -34,6 +34,20 @@ npm run dev
 
 Open http://localhost:3000.
 
+## Tests
+
+```bash
+npm test          # vitest
+npm run check     # tsc + eslint + vitest
+```
+
+The credit and unlock tests run against a real throwaway SQLite database
+built from the actual migrations (`prisma/test.db`, created and dropped
+per run) rather than a mocked Prisma client — the bugs they guard against
+are database-level races, which a mock cannot reproduce. They include a
+regression test for a shipped bug where concurrent unlock requests could
+each pass the same stale `credits > 0` read and drive a balance negative.
+
 ## Environment variables
 
 All of these have safe fallbacks except `AUTH_SECRET` — the app works and
@@ -81,6 +95,37 @@ Every gate is enforced server-side, not just hidden in the UI:
 - Credit grants from Stripe are idempotent, keyed on the checkout session
   id, so the webhook and the redirect-back confirmation route can't
   double-grant if both fire.
+- Spending a credit is a single conditional `UPDATE ... WHERE credits > 0`,
+  so the database decides who gets the last credit. It deliberately isn't
+  wrapped in one long interactive transaction: SQLite takes a global write
+  lock, and concurrent long transactions deadlock and surface as 500s.
+
+## Abuse and rate limiting
+
+Generating a new market is a billable AI call with live web search, so
+that path is metered while everything else stays free:
+
+- **New scouts** are limited per account (or per IP when signed out).
+  Re-opening a topic that has already been scouted is a plain database
+  read — unmetered, matching the "searching is always free" pricing.
+- **Sign-in attempts** are throttled per IP to slow credential stuffing.
+- Query strings are normalized (case, whitespace, length) before being
+  used as the market cache key, so trivial variants can't be used to force
+  duplicate paid generations of a market that already exists.
+
+`src/lib/rate-limit.ts` keeps counters **in process memory**. That
+correctly protects a single instance. If you scale horizontally or deploy
+to a platform that spins up many isolates, each keeps its own counter and
+the effective limit multiplies — move that module to Redis/Upstash at that
+point; the call sites don't change.
+
+### Known limitation
+
+Sign-up and sign-in share one form, so submitting a wrong password for an
+existing address reveals that the address is registered (a new address
+would instead create an account). That's inherent to the frictionless
+one-step flow in the original design; closing it means adding a separate
+sign-up step or an email-verification round trip.
 
 ## Project structure
 
