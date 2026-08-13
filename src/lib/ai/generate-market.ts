@@ -35,11 +35,13 @@ const MAX_PAUSE_RESUMES = 4;
 const MAX_OUTPUT_TOKENS = 32_000;
 
 /**
- * Live research with web search is slow, but not unbounded — without a
- * ceiling a hung request leaves the market "pending" forever and the
- * client polls it indefinitely.
+ * Per-request ceiling. Live research is genuinely slow — a measured run
+ * with ten web searches took ~4 minutes of wall clock across its calls —
+ * but it must not hang forever, or the market stays "pending" and the
+ * client polls it indefinitely. Sized well above observed runtimes so a
+ * normal generation is never killed mid-flight.
  */
-const GENERATION_TIMEOUT_MS = 3 * 60 * 1000;
+const GENERATION_TIMEOUT_MS = 5 * 60 * 1000;
 
 /**
  * A market still "pending" after this long has almost certainly lost its
@@ -47,7 +49,7 @@ const GENERATION_TIMEOUT_MS = 3 * 60 * 1000;
  * and the AI call finishing). Treat it as retryable rather than letting
  * it hang forever.
  */
-export const STALE_PENDING_MS = 5 * 60 * 1000;
+export const STALE_PENDING_MS = 8 * 60 * 1000;
 
 const SYSTEM_PROMPT = `You are Niche Scouter's research engine. Given a broad industry or hobby topic, you use live web search to find real, underserved sub-niches within it — small, specific opportunities where demand outpaces the quality or attention of existing sellers/creators/businesses.
 

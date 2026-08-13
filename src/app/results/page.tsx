@@ -24,8 +24,13 @@ const STATUSES = [
 const GENERIC_LOCKED = ["Competition score", "Keyword clusters", "Competitor gaps", "Sourcing notes"];
 
 const POLL_INTERVAL_MS = 900;
-/** Slightly beyond the server's own generation ceiling. */
-const POLL_TIMEOUT_MS = 4 * 60 * 1000;
+/**
+ * Must sit beyond the server's own generation ceiling, not just above
+ * the average: a measured run took 232s against an earlier 240s cap,
+ * which would have shown the user a spurious timeout on a search that
+ * was about to succeed.
+ */
+const POLL_TIMEOUT_MS = 7 * 60 * 1000;
 
 export default function ResultsPage() {
   return (

@@ -99,6 +99,47 @@ describe("aiMarketSchema", () => {
     ).not.toThrow();
   });
 
+  /**
+   * REGRESSION: observed on the first live run — one niche returned
+   * `sourcing` as a bare string instead of an array, failing validation
+   * and costing an entire extra research round-trip to repair.
+   */
+  it("accepts a bare string where a list of strings is expected", () => {
+    const parsed = aiMarketSchema.parse({
+      niches: [validNiche({ sourcing: "One sourcing note.", ideas: "One idea." })],
+    });
+    expect(parsed.niches[0].sourcing).toEqual(["One sourcing note."]);
+    expect(parsed.niches[0].ideas).toEqual(["One idea."]);
+  });
+
+  it("wraps a singular string without splitting or reinterpreting it", () => {
+    const text = "Two suppliers quote $4/unit; MOQ 250. Lead time 3 weeks.";
+    const parsed = aiMarketSchema.parse({ niches: [validNiche({ sourcing: text })] });
+    expect(parsed.niches[0].sourcing).toEqual([text]);
+  });
+
+  it("accepts numbers in tuple positions that render as text", () => {
+    const parsed = aiMarketSchema.parse({
+      niches: [
+        validNiche({
+          keywords: [["puck screen", 9400, 11, "+64%"]],
+          metrics: [["Demand", 72], ["Competition", 30]],
+        }),
+      ],
+    });
+    expect(parsed.niches[0].keywords[0]).toEqual(["puck screen", "9400", "11", "+64%"]);
+    expect(parsed.niches[0].metrics[0]).toEqual(["Demand", "72"]);
+  });
+
+  it("does not stringify null or objects in tuple positions", () => {
+    expect(() =>
+      aiMarketSchema.parse({ niches: [validNiche({ metrics: [["Demand", null]] })] })
+    ).toThrow();
+    expect(() =>
+      aiMarketSchema.parse({ niches: [validNiche({ metrics: [["Demand", {}]] })] })
+    ).toThrow();
+  });
+
   it("still rejects genuinely unusable output", () => {
     expect(() => aiMarketSchema.parse({ niches: [] })).toThrow();
     expect(() => aiMarketSchema.parse({ niches: [validNiche({ name: "" })] })).toThrow();

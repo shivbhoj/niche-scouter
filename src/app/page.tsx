@@ -6,16 +6,18 @@ import { useAppUi } from "@/lib/app-ui";
 import { EXAMPLE_MARKETS } from "@/lib/ai/seed-data";
 import { PLANS } from "@/lib/stripe";
 
+// Every figure here is measured against the real research pipeline —
+// see `npm run validate:ai`. Don't add a stat the product can't back.
 const STATS = [
-  { value: "14", label: "Live sources read per scout — search, marketplaces, forums, job posts" },
-  { value: "90s", label: "Median time from a broad topic to four scored niches" },
-  { value: "612", label: "Listings parsed per market to measure real supply, not guesses" },
+  { value: "10", label: "Live web searches per scout — read fresh at the moment you ask, not recalled" },
+  { value: "4", label: "Niches scored per market, ranked by how underserved each one is" },
+  { value: "~4min", label: "A full research run, from a broad topic to evidence-linked niches" },
   { value: "2", label: "Full reports free on every new account — no card, no subscription" },
 ];
 
 const STEPS = [
   { num: "01", title: "You give a broad topic", body: `An industry, a hobby, a category — "home coffee equipment" is enough. No keyword lists to prepare.` },
-  { num: "02", title: "We search live, not from memory", body: "Demand data, marketplace listings, community threads and hiring signals are pulled fresh at the moment you ask." },
+  { num: "02", title: "We search live, not from memory", body: "Competitor listings, community threads and demand signals are searched fresh at the moment you ask — not recalled from training data." },
   { num: "03", title: "You get scored niches with receipts", body: "Each one carries demand, competition and revenue potential — plus the keyword, competitor and sourcing evidence behind the score." },
 ];
 

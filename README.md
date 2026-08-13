@@ -80,6 +80,40 @@ Get a key at https://console.anthropic.com/settings/keys, set
 researched live via web search and cached in the database (subsequent
 searches for the same topic are instant, reading from the cache).
 
+Validate the pipeline and measure what it actually costs:
+
+```bash
+npm run validate:ai                      # three default topics
+npm run validate:ai "vintage synthesizers"   # or your own
+```
+
+### Measured economics
+
+From live runs across five topics (`claude-opus-5`, 10 web searches each):
+
+| | Measured |
+|---|---|
+| Cost per market (4 niches) | **$0.48 – $1.03**, ~$0.76 typical |
+| Cost per sellable report | **~$0.19** |
+| Wall-clock per market | **210 – 260s** |
+| Margin at $2.50/report (12-pack) | **~92%** |
+
+Two things follow from this, and both are already handled in code:
+
+- **A market costs money before anyone pays for it.** Searching is free by
+  design, so an abandoned search is a real ~$0.76 loss. This is why new
+  market generation is rate limited while cached reads are not — see
+  *Abuse and rate limiting*.
+- **Runs take minutes, not seconds.** Server timeout, stale-pending
+  recovery, and the client poll ceiling are all sized above the observed
+  ceiling; a measured 232s run once came within 8 seconds of a 240s client
+  timeout, so these are deliberately generous.
+
+Switching `ANTHROPIC_MODEL` to `claude-sonnet-5` roughly halves the token
+cost. That's a quality-vs-cost call worth making with your own eyes on the
+output — re-run `validate:ai` after switching and compare the sample
+reports it prints.
+
 ## How the paywall actually works
 
 Every gate is enforced server-side, not just hidden in the UI:

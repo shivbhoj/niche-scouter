@@ -10,12 +10,39 @@ import { z } from "zod";
  * here, then coerce to the layout's shape in `normalizeNiche`.
  */
 
-const pair = z.tuple([z.string(), z.string()]);
-const triple = z.tuple([z.string(), z.string(), z.string()]);
-const quad = z.tuple([z.string(), z.string(), z.string(), z.string()]);
+/**
+ * A display string, tolerating a bare number.
+ *
+ * Every tuple position here is rendered as text (a keyword volume, a
+ * difficulty score, a margin), and models intermittently emit `11` where
+ * the shape asks for `"KD 11"`. Accepting the number and stringifying it
+ * is free; re-prompting to fix it costs a whole research round-trip.
+ * Deliberately a narrow union rather than `z.coerce.string()`, which
+ * would happily turn `null` into `"null"`.
+ */
+const text = z.union([z.string(), z.number().transform(String)]);
+
+const pair = z.tuple([text, text]);
+const triple = z.tuple([text, text, text]);
+const quad = z.tuple([text, text, text, text]);
 
 // Models sometimes emit "78" rather than 78 for a score.
 const score = z.coerce.number().min(0).max(100);
+
+/**
+ * A list-of-strings field, tolerating a bare string.
+ *
+ * Observed on the first live run: one niche returned `sourcing` as a
+ * single string rather than an array, which failed validation and cost a
+ * whole extra research round-trip to repair. Accepting the singular form
+ * is strictly cheaper than re-prompting for it, and loses nothing — the
+ * value is wrapped, never split or reinterpreted.
+ */
+const stringList = (min: number, max: number) =>
+  z.preprocess(
+    (v) => (typeof v === "string" ? [v] : v),
+    z.array(z.string()).min(min).max(max)
+  );
 
 export const aiNicheSchema = z.object({
   name: z.string().min(1),
@@ -34,8 +61,8 @@ export const aiNicheSchema = z.object({
   keywords: z.array(quad).min(1).max(10),
   competitors: z.array(triple).min(1).max(8),
   playbook: z.array(quad).min(1).max(6),
-  ideas: z.array(z.string()).min(1).max(12),
-  sourcing: z.array(z.string()).min(1).max(8),
+  ideas: stringList(1, 12),
+  sourcing: stringList(1, 8),
   risks: z.array(pair).min(1).max(8),
   sources: z.array(pair).min(1).max(12),
 });
