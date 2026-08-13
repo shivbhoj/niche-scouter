@@ -2,8 +2,17 @@ import Anthropic from "@anthropic-ai/sdk";
 import { db } from "@/lib/db";
 import { SEED_DATA } from "./seed-data";
 import { fromSeed } from "./from-seed";
-import { aiMarketSchema } from "./schema";
+import { aiMarketSchema, normalizeNiche, MAX_NICHES } from "./schema";
+import { extractJson } from "./extract-json";
 import type { NicheReportContent } from "@/lib/types";
+
+/**
+ * How many times to hand a validation failure back to the model and ask
+ * it to correct its own output before giving up. Research runs are slow
+ * and billable, so re-prompting with the specific error is far cheaper
+ * than discarding the work and starting over.
+ */
+const MAX_REPAIR_ATTEMPTS = 2;
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
 
@@ -57,13 +66,19 @@ Return ONLY a single JSON object (no markdown fences, no commentary before or af
 
 Return exactly 4 niches, ranked best-first by how underserved and viable they are. All numbers must be realistic and internally consistent (a niche with demand 80+ and competition under 20 is a strong pick; be honest, not uniformly optimistic).`;
 
-function extractJson(text: string): unknown {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced ? fenced[1] : text;
-  const start = candidate.indexOf("{");
-  const end = candidate.lastIndexOf("}");
-  if (start === -1 || end === -1) throw new Error("No JSON object found in model output");
-  return JSON.parse(candidate.slice(start, end + 1));
+function textOf(response: Anthropic.Message): string {
+  return response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("\n");
+}
+
+/** Parse + validate + coerce to the layout's shape. */
+export function parseMarketResponse(text: string): NicheReportContent[] {
+  const parsed = aiMarketSchema.parse(extractJson(text));
+  return parsed.niches
+    .slice(0, MAX_NICHES)
+    .map((n) => fromSeed(normalizeNiche(n)));
 }
 
 async function generateViaAi(query: string): Promise<NicheReportContent[]> {
@@ -71,29 +86,60 @@ async function generateViaAi(query: string): Promise<NicheReportContent[]> {
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
   const client = new Anthropic({ apiKey });
 
-  const response = await client.messages.create(
+  const messages: Anthropic.MessageParam[] = [
     {
-      model: MODEL,
-      max_tokens: 8000,
-      system: SYSTEM_PROMPT,
-      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 10 }],
-      messages: [
-        {
-          role: "user",
-          content: `Broad topic: "${query}"\n\nResearch this live and return the JSON object described in your instructions.`,
-        },
-      ],
+      role: "user",
+      content: `Broad topic: "${query}"\n\nResearch this live and return the JSON object described in your instructions.`,
     },
-    { timeout: GENERATION_TIMEOUT_MS }
-  );
+  ];
 
-  const text = response.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("\n");
+  let lastError: unknown;
 
-  const parsed = aiMarketSchema.parse(extractJson(text));
-  return parsed.niches.map((n) => fromSeed(n));
+  for (let attempt = 0; attempt <= MAX_REPAIR_ATTEMPTS; attempt++) {
+    const response = await client.messages.create(
+      {
+        model: MODEL,
+        max_tokens: 8000,
+        system: SYSTEM_PROMPT,
+        // Only the first pass needs to search; repair turns are purely
+        // about reshaping text the model has already produced.
+        tools:
+          attempt === 0
+            ? [{ type: "web_search_20250305", name: "web_search", max_uses: 10 }]
+            : [],
+        messages,
+      },
+      { timeout: GENERATION_TIMEOUT_MS }
+    );
+
+    const text = textOf(response);
+    try {
+      return parseMarketResponse(text);
+    } catch (err) {
+      lastError = err;
+      if (attempt === MAX_REPAIR_ATTEMPTS) break;
+
+      // Show the model exactly what was wrong with its own output and
+      // ask for a corrected body. Cheaper and far more reliable than
+      // throwing away a completed research run.
+      console.warn(
+        `[generateMarket] attempt ${attempt + 1} failed validation for ${JSON.stringify(query)}; asking model to repair`,
+        err instanceof Error ? err.message : err
+      );
+      messages.push({ role: "assistant", content: text.slice(0, 20000) });
+      messages.push({
+        role: "user",
+        content:
+          `That response did not validate: ${err instanceof Error ? err.message : String(err)}\n\n` +
+          `Return the corrected JSON object only — no commentary, no markdown fences. ` +
+          `Keep the research findings identical; fix only the structure.`,
+      });
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Model output failed validation");
 }
 
 function generateViaSeed(query: string): NicheReportContent[] | null {

@@ -144,25 +144,25 @@ export default function LandingPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, alignItems: "stretch" }}>
             <PlanCard
               name="Free" tag="start here" price="$0" period="forever" reports="2 full reports included"
-              features={["Unlimited searching and scoring", "2 full reports, kept forever", "Evidence and source links"]}
+              features={["Search and score any market", "2 full reports, kept forever", "Evidence and source links"]}
               cta="Create account" btnBg="transparent" btnFg="var(--ink)"
               onClick={() => openAuth()}
             />
             <PlanCard
               name="Single report" tag="pay as you go" price="$5" period="one report" reports="$5.00 each"
-              features={["One full report, kept forever", "Every section and source link", "CSV export", "No commitment"]}
+              features={["One full report, kept forever", "Every section and source link", "No commitment"]}
               cta="Buy one report" btnBg="transparent" btnFg="var(--ink)"
               onClick={() => openPaywall()}
             />
             <PlanCard
               name="Report pack" tag="most popular" price={`$${PLANS.pack5.amountCents / 100}`} period="5 reports" reports="$3.00 each · save 40%"
-              features={["5 credits, never expire", "Saved markets and re-scout", "CSV export", "Nothing renews"]}
+              features={["5 credits, never expire", "Unlock history in your dashboard", "Re-scout any market", "Nothing renews"]}
               cta="Buy 5 reports" btnBg="var(--ink)" btnFg="var(--bg)"
               onClick={() => openPaywall()}
             />
             <PlanCard
               name="Deep dive pack" tag="best value" price={`$${PLANS.pack12.amountCents / 100}`} period="12 reports" reports="$2.50 each · save 50%"
-              features={["12 credits, never expire", "Everything in the report pack", "Client-ready PDF export", "Share with 2 teammates"]}
+              features={["12 credits, never expire", "Everything in the report pack", "Lowest price per report", "Best for comparing several markets"]}
               cta="Buy 12 reports" btnBg="transparent" btnFg="var(--ink)"
               onClick={() => openPaywall()}
             />
