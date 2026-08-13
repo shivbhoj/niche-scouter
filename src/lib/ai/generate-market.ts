@@ -4,6 +4,7 @@ import { SEED_DATA } from "./seed-data";
 import { fromSeed } from "./from-seed";
 import { aiMarketSchema, normalizeNiche, MAX_NICHES } from "./schema";
 import { extractJson } from "./extract-json";
+import { addUsage, emptyUsage, formatUsage, type GenerationUsage } from "./cost";
 import type { NicheReportContent } from "@/lib/types";
 
 /**
@@ -14,7 +15,24 @@ import type { NicheReportContent } from "@/lib/types";
  */
 const MAX_REPAIR_ATTEMPTS = 2;
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
+export const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5";
+
+/**
+ * A turn that uses server-side web search runs an internal loop; when it
+ * reaches its iteration limit the turn comes back with
+ * `stop_reason: "pause_turn"` and must be re-sent to continue. Without
+ * this the research is silently truncated mid-flight and we try to parse
+ * an incomplete answer.
+ */
+const MAX_PAUSE_RESUMES = 4;
+
+/**
+ * `max_tokens` bounds thinking *and* visible output together, and the
+ * default model thinks. The report body alone is several thousand
+ * tokens, so a tight cap truncates the JSON mid-object. Anything this
+ * large must stream, or the request hits the SDK's HTTP timeout.
+ */
+const MAX_OUTPUT_TOKENS = 32_000;
 
 /**
  * Live research with web search is slow, but not unbounded — without a
@@ -66,6 +84,9 @@ Return ONLY a single JSON object (no markdown fences, no commentary before or af
 
 Return exactly 4 niches, ranked best-first by how underserved and viable they are. All numbers must be realistic and internally consistent (a niche with demand 80+ and competition under 20 is a strong pick; be honest, not uniformly optimistic).`;
 
+/** Raised for problems whose text is safe to show an end user. */
+class UserFacingError extends Error {}
+
 function textOf(response: Anthropic.Message): string {
   return response.content
     .filter((b): b is Anthropic.TextBlock => b.type === "text")
@@ -81,7 +102,66 @@ export function parseMarketResponse(text: string): NicheReportContent[] {
     .map((n) => fromSeed(normalizeNiche(n)));
 }
 
-async function generateViaAi(query: string): Promise<NicheReportContent[]> {
+/**
+ * Run one turn to completion, resuming across `pause_turn` boundaries.
+ *
+ * A turn using server-side web search pauses when its internal loop hits
+ * the iteration limit. Resuming is just re-sending with the paused
+ * assistant turn appended — deliberately *without* a new user message,
+ * which is what tells the server to continue rather than start over.
+ */
+async function runTurn(
+  client: Anthropic,
+  messages: Anthropic.MessageParam[],
+  tools: Anthropic.ToolUnion[],
+  usage: GenerationUsage
+): Promise<Anthropic.Message> {
+  for (let resume = 0; resume <= MAX_PAUSE_RESUMES; resume++) {
+    const stream = client.messages.stream(
+      {
+        model: MODEL,
+        max_tokens: MAX_OUTPUT_TOKENS,
+        system: SYSTEM_PROMPT,
+        tools,
+        messages,
+      },
+      { timeout: GENERATION_TIMEOUT_MS }
+    );
+    const message = await stream.finalMessage();
+    addUsage(usage, message.usage);
+
+    if (message.stop_reason === "refusal") {
+      throw new UserFacingError(
+        "This topic was declined by the research model's safety filters. Try a different market."
+      );
+    }
+    if (message.stop_reason !== "pause_turn") return message;
+
+    messages.push({ role: "assistant", content: message.content });
+  }
+  throw new Error(`Research did not converge after ${MAX_PAUSE_RESUMES} resumes`);
+}
+
+export interface ResearchResult {
+  niches: NicheReportContent[];
+  usage: GenerationUsage;
+}
+
+/**
+ * Research a topic and return both the niches and what they cost to
+ * produce. Exported so the validation script can report real economics
+ * without reimplementing the pipeline.
+ */
+export async function researchMarket(query: string): Promise<ResearchResult> {
+  const usage = emptyUsage();
+  const niches = await generateViaAi(query, usage);
+  return { niches, usage };
+}
+
+async function generateViaAi(
+  query: string,
+  usage: GenerationUsage = emptyUsage()
+): Promise<NicheReportContent[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
   const client = new Anthropic({ apiKey });
@@ -95,51 +175,50 @@ async function generateViaAi(query: string): Promise<NicheReportContent[]> {
 
   let lastError: unknown;
 
-  for (let attempt = 0; attempt <= MAX_REPAIR_ATTEMPTS; attempt++) {
-    const response = await client.messages.create(
-      {
-        model: MODEL,
-        max_tokens: 8000,
-        system: SYSTEM_PROMPT,
-        // Only the first pass needs to search; repair turns are purely
-        // about reshaping text the model has already produced.
-        tools:
-          attempt === 0
-            ? [{ type: "web_search_20250305", name: "web_search", max_uses: 10 }]
-            : [],
-        messages,
-      },
-      { timeout: GENERATION_TIMEOUT_MS }
-    );
+  try {
+    for (let attempt = 0; attempt <= MAX_REPAIR_ATTEMPTS; attempt++) {
+      // Only the first pass searches; repair turns reshape text the
+      // model has already produced, so they need no tools.
+      const tools: Anthropic.ToolUnion[] =
+        attempt === 0
+          ? [{ type: "web_search_20260209", name: "web_search", max_uses: 10 }]
+          : [];
 
-    const text = textOf(response);
-    try {
-      return parseMarketResponse(text);
-    } catch (err) {
-      lastError = err;
-      if (attempt === MAX_REPAIR_ATTEMPTS) break;
+      const response = await runTurn(client, messages, tools, usage);
+      const text = textOf(response);
 
-      // Show the model exactly what was wrong with its own output and
-      // ask for a corrected body. Cheaper and far more reliable than
-      // throwing away a completed research run.
-      console.warn(
-        `[generateMarket] attempt ${attempt + 1} failed validation for ${JSON.stringify(query)}; asking model to repair`,
-        err instanceof Error ? err.message : err
-      );
-      messages.push({ role: "assistant", content: text.slice(0, 20000) });
-      messages.push({
-        role: "user",
-        content:
-          `That response did not validate: ${err instanceof Error ? err.message : String(err)}\n\n` +
-          `Return the corrected JSON object only — no commentary, no markdown fences. ` +
-          `Keep the research findings identical; fix only the structure.`,
-      });
+      try {
+        return parseMarketResponse(text);
+      } catch (err) {
+        lastError = err;
+        if (attempt === MAX_REPAIR_ATTEMPTS) break;
+
+        // Show the model exactly what was wrong with its own output and
+        // ask for a corrected body. Cheaper and far more reliable than
+        // throwing away a completed research run.
+        console.warn(
+          `[generateMarket] attempt ${attempt + 1} failed validation for ${JSON.stringify(query)}; asking model to repair`,
+          err instanceof Error ? err.message : err
+        );
+        messages.push({ role: "assistant", content: text.slice(0, 20000) });
+        messages.push({
+          role: "user",
+          content:
+            `That response did not validate: ${err instanceof Error ? err.message : String(err)}\n\n` +
+            `Return the corrected JSON object only — no commentary, no markdown fences. ` +
+            `Keep the research findings identical; fix only the structure.`,
+        });
+      }
     }
-  }
 
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("Model output failed validation");
+    throw lastError instanceof Error
+      ? lastError
+      : new Error("Model output failed validation");
+  } finally {
+    // Log even on failure — a failed generation still costs money, and
+    // that is exactly the case worth noticing.
+    console.info(`[generateMarket] ${JSON.stringify(query)} — ${formatUsage(usage, MODEL)}`);
+  }
 }
 
 function generateViaSeed(query: string): NicheReportContent[] | null {
@@ -147,9 +226,6 @@ function generateViaSeed(query: string): NicheReportContent[] | null {
   if (!seed) return null;
   return seed.map((n) => fromSeed(n));
 }
-
-/** Raised for problems whose text is safe to show an end user. */
-class UserFacingError extends Error {}
 
 export async function generateMarket(marketId: string, query: string) {
   try {
