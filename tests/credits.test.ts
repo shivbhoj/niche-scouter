@@ -180,10 +180,10 @@ describe("grantCredits", () => {
     const user = await makeUser(0);
 
     await grantCredits(user.id, 1, "purchase:single", "cs_a");
-    await grantCredits(user.id, 12, "purchase:pack12", "cs_b");
+    await grantCredits(user.id, 15, "purchase:pack15", "cs_b");
 
     const after = await db.user.findUniqueOrThrow({ where: { id: user.id } });
-    expect(after.credits).toBe(13);
+    expect(after.credits).toBe(16);
   });
 
   it("purchased credits are spendable", async () => {

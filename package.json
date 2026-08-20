@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:ai": "tsx scripts/validate-ai.ts",
+    "metrics": "tsx scripts/metrics.ts",
     "check": "tsc --noEmit && eslint && vitest run",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",

@@ -17,10 +17,13 @@ model User {
   id           String       @id @default(cuid())
   email        String       @unique
   passwordHash String
-  credits      Int          @default(2)
+  // "Run your first report free" — one, not two. The free report exists
+  // to remove the last excuse, not to satisfy the need.
+  credits      Int          @default(1)
   createdAt    DateTime     @default(now())
   unlocks      Unlock[]
   creditTxns   CreditTxn[]
+  events       Event[]
 }
 
 // One row per distinct topic a user has scouted. Acts as a cache so
@@ -45,6 +48,9 @@ model Niche {
   name        String
   teaser      String
   demand      Int
+  // How wide the gap is, 1-10. A column rather than buried in the report
+  // blob because the compare view ranks unlocked reports by it.
+  gapScore    Int      @default(5)
   revenue     String
   revenueNote String
   reportJson  String
@@ -66,6 +72,24 @@ model Unlock {
   @@unique([userId, nicheId])
   // The results page asks "which of these niches does this user own?"
   @@index([nicheId])
+}
+
+/**
+ * Minimal funnel telemetry. The launch plan gates ad spend on
+ * reports-per-buyer and adjacency click rate, so those have to be
+ * measurable before any money goes into traffic — an unmeasured funnel
+ * is the thing that turns a budget into a guess.
+ */
+model Event {
+  id        String   @id @default(cuid())
+  name      String // adjacency_click | report_opened | search_started
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  meta      String? // small JSON blob: source industry, target industry, etc.
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([userId])
 }
 
 model CreditTxn {

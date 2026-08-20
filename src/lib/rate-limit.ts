@@ -79,3 +79,6 @@ export function clientKey(req: Request): string {
 export const searchLimiter = new RateLimiter(10, 60 * 60 * 1000);
 export const authLimiter = new RateLimiter(10, 15 * 60 * 1000);
 export const checkoutLimiter = new RateLimiter(20, 60 * 60 * 1000);
+// Telemetry writes are cheap, but the endpoint is open — keep it from
+// being usable as a way to flood the table.
+export const eventLimiter = new RateLimiter(120, 60 * 60 * 1000);

@@ -62,7 +62,7 @@ export function AuthModal() {
           Create account
         </div>
         <h2 className="serif" style={{ fontWeight: 400, fontSize: 34, lineHeight: 1.1, margin: "14px 0 10px" }}>
-          Two full reports, on the house.
+          Your first report, on the house.
         </h2>
         <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--ink-soft)", margin: "0 0 26px" }}>
           No card required. Keep every report you open.

@@ -5,9 +5,16 @@ import { db } from "@/lib/db";
 import { authLimiter, clientKey } from "@/lib/rate-limit";
 import { validateCredentials } from "@/lib/credentials";
 
+/**
+ * "Run your first report free." One credit, not two — the free report
+ * exists to remove the last objection, not to satisfy the need. Must
+ * stay in step with the default on User.credits.
+ */
+export const FREE_SIGNUP_CREDITS = 1;
+
 // Single form handles both signup and sign-in, mirroring the design's
 // one-step "create account & unlock" modal: unknown emails are provisioned
-// on the spot (with the 2 free-report bonus), known emails must match
+// on the spot (with the free-report credit), known emails must match
 // their password.
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
@@ -42,9 +49,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           data: {
             email,
             passwordHash,
-            credits: 2,
+            credits: FREE_SIGNUP_CREDITS,
             creditTxns: {
-              create: { delta: 2, reason: "signup_bonus" },
+              create: { delta: FREE_SIGNUP_CREDITS, reason: "signup_bonus" },
             },
           },
         });

@@ -8,6 +8,12 @@ function validNiche(over: Partial<Record<string, unknown>> = {}) {
     name: "Test niche",
     teaser: "A one-liner.",
     demand: 72,
+    gapScore: 7,
+    adjacency: [
+      ["Neighbouring market", "Why it applies too.", "The finding it rests on"],
+      ["Second market", "Another reason.", "Another finding"],
+      ["Third market", "A third reason.", "A third finding"],
+    ],
     revenue: "$12k/mo",
     revenueNote: "yr-1 realistic",
     thesis: "The thesis.",
@@ -202,5 +208,53 @@ describe("normalizeNiche", () => {
 
   it("rounds demand for display", () => {
     expect(norm({ demand: 72.6 }).demand).toBe(73);
+  });
+
+  it("clamps the gap score into 1-10", () => {
+    expect(norm({ gapScore: 7.4 }).gapScore).toBe(7);
+    expect(norm({ gapScore: 10 }).gapScore).toBe(10);
+    expect(norm({ gapScore: 1 }).gapScore).toBe(1);
+  });
+
+  it("trims adjacency to exactly the three cards the layout renders", () => {
+    const out = norm({
+      adjacency: Array(5).fill(["Market", "Reason", "Finding"]),
+    });
+    expect(out.adjacency).toHaveLength(3);
+  });
+});
+
+describe("adjacency contract", () => {
+  const parse = (over: Record<string, unknown>) =>
+    aiMarketSchema.parse({ niches: [validNiche(over)] }).niches[0];
+
+  /**
+   * The linked finding is what separates a derived suggestion from a
+   * generic guess, and the product's whole promise is that claims trace
+   * back to something real. A row missing it must not validate.
+   */
+  it("requires all three parts of an adjacency row", () => {
+    expect(() => parse({ adjacency: [["Market", "Reason"]] })).toThrow();
+    expect(() => parse({ adjacency: [["Market"]] })).toThrow();
+  });
+
+  it("rejects a niche with no adjacency at all", () => {
+    expect(() => parse({ adjacency: [] })).toThrow();
+  });
+
+  it("keeps industry, reason and linked finding in order", () => {
+    const out = parse({ adjacency: [["Vintage synths", "Same repair gap.", "OEMs stop servicing"]] });
+    expect(out.adjacency[0]).toEqual(["Vintage synths", "Same repair gap.", "OEMs stop servicing"]);
+  });
+
+  it("requires a gap score", () => {
+    const { gapScore, ...withoutScore } = validNiche();
+    expect(gapScore).toBeDefined();
+    expect(() => aiMarketSchema.parse({ niches: [withoutScore] })).toThrow();
+  });
+
+  it("rejects a gap score outside 1-10", () => {
+    expect(() => parse({ gapScore: 0 })).toThrow();
+    expect(() => parse({ gapScore: 11 })).toThrow();
   });
 });

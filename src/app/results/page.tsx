@@ -197,10 +197,11 @@ function ResultsView() {
   const statusDot = status === "pending" ? "var(--live-dot)" : status === "error" ? "#b3261e" : "var(--ok-fg)";
 
   return (
-    <main style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 40px 96px" }}>
+    <main className="res-main" style={{ maxWidth: 1180, margin: "0 auto" }}>
       <form
         onSubmit={submitSearch}
-        style={{ display: "flex", alignItems: "center", gap: 12, padding: "6px 6px 6px 20px", background: "#fff", border: "1px solid var(--hairline)", borderRadius: 999, maxWidth: 620 }}
+        className="res-searchbar"
+        style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", border: "1px solid var(--hairline)", maxWidth: 620 }}
       >
         <input
           value={inputValue}
@@ -213,8 +214,8 @@ function ResultsView() {
         </button>
       </form>
 
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 24, margin: "40px 0 10px" }}>
-        <h1 className="serif" style={{ fontWeight: 400, fontSize: 44, lineHeight: 1.1, margin: 0, letterSpacing: "-0.01em" }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 12, margin: "40px 0 10px" }}>
+        <h1 className="serif res-title" style={{ fontWeight: 400, lineHeight: 1.1, margin: 0, letterSpacing: "-0.01em" }}>
           {query ? `Underserved corners of ${query}` : "Underserved corners"}
         </h1>
         <span className="mono" style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>
@@ -226,7 +227,7 @@ function ResultsView() {
         {statusLine}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20, marginTop: 28 }}>
+      <div className="res-grid" style={{ marginTop: 28 }}>
         {niches.map((n) => (
           <NicheCard key={n.id} n={n} signedIn={me.signedIn} credits={me.credits} onReveal={() => reveal(n)} />
         ))}
@@ -249,7 +250,7 @@ function NicheCard({
     : "Sign up to reveal full report";
 
   return (
-    <div className="card-hover" style={{ display: "flex", flexDirection: "column", padding: 28, border: "1px solid var(--hairline)", borderRadius: 4, background: "#fff" }}>
+    <div className="card-hover res-card" style={{ display: "flex", flexDirection: "column", border: "1px solid var(--hairline)", borderRadius: 4, background: "#fff" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
         <span className="mono" style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted)" }}>
           Niche {String(n.rank).padStart(2, "0")}

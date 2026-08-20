@@ -5,6 +5,12 @@ export function fromSeed(n: TupleNiche): NicheReportContent {
     name: n.name,
     teaser: n.teaser,
     demand: n.demand,
+    gapScore: n.gapScore,
+    adjacency: n.adjacency.map(([industry, reason, linkedFinding]) => ({
+      industry,
+      reason,
+      linkedFinding,
+    })),
     revenue: n.revenue,
     revenueNote: n.revenueNote,
     thesis: n.thesis,

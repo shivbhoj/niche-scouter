@@ -38,5 +38,27 @@ export default async function ReportPage({
   }
   const report: NicheReport = { id: niche.id, rank: niche.rank, ...content };
 
-  return <ReportView report={report} query={market.query} marketId={marketId} />;
+  // Denominator for the adjacency click rate: the block is seen exactly
+  // when a report is served. Never block rendering a paid report on a
+  // telemetry write.
+  void db.event
+    .create({
+      data: {
+        name: "report_opened",
+        userId: user.id,
+        meta: JSON.stringify({ market: market.query, niche: niche.name }),
+      },
+    })
+    .catch((err) => console.error("[metrics] report_opened failed", err));
+
+  return (
+    <ReportView
+      report={report}
+      query={market.query}
+      marketId={marketId}
+      // When the research actually ran. Showing the render date here
+      // would silently claim a cached report is fresh.
+      dataPulledAt={market.createdAt}
+    />
+  );
 }

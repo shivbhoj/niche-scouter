@@ -63,6 +63,8 @@ Return ONLY a single JSON object (no markdown fences, no commentary before or af
       "name": string,                          // short niche name
       "teaser": string,                         // one sentence, no jargon
       "demand": number,                         // 1-100
+      "gapScore": number,                       // 1-10, see scoring note below
+      "adjacency": [["Industry","Why it likely applies too","The specific finding above this rests on"], ... exactly 3 rows],
       "revenue": string,                        // e.g. "$14k/mo"
       "revenueNote": string,                    // e.g. "top-quartile store"
       "thesis": string,                         // 1-2 sentences, the core insight
@@ -84,7 +86,15 @@ Return ONLY a single JSON object (no markdown fences, no commentary before or af
   ]
 }
 
-Return exactly 4 niches, ranked best-first by how underserved and viable they are. All numbers must be realistic and internally consistent (a niche with demand 80+ and competition under 20 is a strong pick; be honest, not uniformly optimistic).`;
+Return exactly 4 niches, ranked best-first by how underserved and viable they are. All numbers must be realistic and internally consistent (a niche with demand 80+ and competition under 20 is a strong pick; be honest, not uniformly optimistic).
+
+GAP SCORE (1-10) measures how wide and reachable the opening is — demand that exists, minus how well incumbents already serve it, minus how hard it is for a newcomer to enter. Use the full range and be discriminating: 8-10 is a rare, genuinely unserved opening; 5-7 is a real but contested gap; 1-4 means the space is already well served or effectively closed to a small operator. Most niches are not 8s. A page of 8s and 9s is useless to someone deciding where to commit, which is the entire job of this score.
+
+ADJACENCY: after the report, name 3 adjacent industries or sub-segments where the demand signals or competitor blind spots you found above are likely to also apply. These must be DERIVED, not generic. For each one:
+- "Industry" is something the reader could paste straight into the search box — a real market, not a category label.
+- "Why it likely applies too" is one sentence connecting this report's finding to that market.
+- "The specific finding above this rests on" must quote or closely paraphrase an actual line from THIS report — a named competitor, a keyword, a sourcing constraint, a risk. If you cannot point at a specific finding, choose a different adjacency. A plausible-sounding neighbour with no evidential link is worse than none, because the whole product promise is that claims trace back to something real.
+Do not suggest the topic that was searched, or a trivial rewording of this niche.`;
 
 /** Raised for problems whose text is safe to show an end user. */
 class UserFacingError extends Error {}
@@ -253,6 +263,7 @@ export async function generateMarket(marketId: string, query: string) {
             name: n.name,
             teaser: n.teaser,
             demand: n.demand,
+            gapScore: n.gapScore,
             revenue: n.revenue,
             revenueNote: n.revenueNote,
             reportJson: JSON.stringify(n),

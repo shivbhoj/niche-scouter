@@ -19,16 +19,16 @@ export default async function DashboardPage() {
   });
 
   return (
-    <main style={{ maxWidth: 1180, margin: "0 auto", padding: "56px 40px 110px" }}>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 24, paddingBottom: 28, borderBottom: "1px solid var(--ink)" }}>
+    <main className="dash-main" style={{ maxWidth: 1180, margin: "0 auto" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 24, paddingBottom: 28, borderBottom: "1px solid var(--ink)" }}>
         <div>
           <div className="mono" style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--muted)" }}>Account</div>
-          <h1 className="serif" style={{ fontWeight: 400, fontSize: 48, lineHeight: 1.05, margin: "16px 0 0", letterSpacing: "-0.01em" }}>{user.email}</h1>
+          <h1 className="serif dash-title" style={{ fontWeight: 400, lineHeight: 1.05, margin: "16px 0 0", letterSpacing: "-0.01em", overflowWrap: "anywhere" }}>{user.email}</h1>
         </div>
         <AddCreditsButton />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "var(--hairline)", borderBottom: "1px solid var(--hairline)" }}>
+      <div className="dash-stats" style={{ background: "var(--hairline)", borderBottom: "1px solid var(--hairline)" }}>
         <div style={{ background: "var(--bg)", padding: "26px 0" }}>
           <div className="mono" style={{ fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--muted)" }}>Report credits left</div>
           <div className="serif" style={{ fontSize: 40, lineHeight: 1, marginTop: 10 }}>{user.credits}</div>
@@ -51,8 +51,8 @@ export default async function DashboardPage() {
             <Link
               key={u.id}
               href={`/report/${u.niche.marketId}/${u.niche.rank}`}
-              className="row-hover"
-              style={{ background: "var(--bg)", display: "grid", gridTemplateColumns: "1fr 200px 130px 90px", gap: 20, alignItems: "center", padding: "22px 0", cursor: "pointer" }}
+              className="row-hover dash-row"
+              style={{ background: "var(--bg)", cursor: "pointer" }}
             >
               <span className="serif" style={{ fontSize: 24 }}>{u.niche.name}</span>
               <span style={{ fontSize: 13, color: "var(--muted)" }}>{u.niche.market.query}</span>
@@ -63,7 +63,7 @@ export default async function DashboardPage() {
         </div>
       ) : (
         <div style={{ padding: 56, border: "1px solid var(--hairline)", borderRadius: 4, textAlign: "center", background: "#fff" }}>
-          <p style={{ fontSize: 15, color: "var(--muted)", margin: "0 0 20px" }}>Nothing unlocked yet. Your two free reports are waiting.</p>
+          <p style={{ fontSize: 15, color: "var(--muted)", margin: "0 0 20px" }}>Nothing unlocked yet. Your free report is waiting.</p>
           <Link href="/" className="btn-hover" style={{ display: "inline-block", padding: "12px 22px", background: "var(--ink)", color: "var(--bg)", border: "none", borderRadius: 999, fontSize: 13 }}>
             Scout a market
           </Link>

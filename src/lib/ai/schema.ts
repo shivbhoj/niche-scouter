@@ -48,6 +48,9 @@ export const aiNicheSchema = z.object({
   name: z.string().min(1),
   teaser: z.string().min(1),
   demand: score,
+  gapScore: z.coerce.number().min(1).max(10),
+  // [industry, reason, linkedFinding]
+  adjacency: z.array(triple).min(1).max(5),
   revenue: z.string().min(1),
   revenueNote: z.string().default(""),
   thesis: z.string().min(1),
@@ -84,6 +87,8 @@ const MAX_IDEAS = 6;
 const MAX_SOURCING = 3;
 const MAX_RISKS = 3;
 const MAX_SOURCES = 5;
+/** The spec calls for exactly three adjacency cards. */
+const MAX_ADJACENCY = 3;
 export const MAX_NICHES = 4;
 
 /**
@@ -125,6 +130,8 @@ export function normalizeNiche(n: AiNiche) {
   return {
     ...n,
     demand: Math.round(n.demand),
+    gapScore: Math.min(10, Math.max(1, Math.round(n.gapScore))),
+    adjacency: n.adjacency.slice(0, MAX_ADJACENCY),
     metrics: metrics.slice(0, MAX_METRICS),
     trend: resampleTrend(n.trend),
     audienceFacts: n.audienceFacts.slice(0, MAX_AUDIENCE_FACTS),

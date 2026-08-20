@@ -8,6 +8,7 @@ export function Header() {
 
   return (
     <header
+      className="site-header"
       style={{
         position: "sticky",
         top: 0,
@@ -16,18 +17,17 @@ export function Header() {
         alignItems: "center",
         justifyContent: "space-between",
         gap: 24,
-        padding: "18px 40px",
         background: "rgba(246,247,249,0.92)",
         backdropFilter: "blur(8px)",
         borderBottom: "1px solid var(--hairline)",
       }}
     >
-      <Link href="/" style={{ display: "flex", alignItems: "baseline", gap: 9, cursor: "pointer" }}>
-        <span className="serif" style={{ fontSize: 22, letterSpacing: "-0.01em" }}>
+      <Link href="/" className="site-logo" style={{ display: "flex", alignItems: "baseline", gap: 9, cursor: "pointer" }}>
+        <span className="serif site-logo-text" style={{ letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>
           Niche Scouter
         </span>
         <span
-          className="mono"
+          className="mono nav-beta"
           style={{
             fontSize: 9,
             letterSpacing: "0.14em",
@@ -38,11 +38,14 @@ export function Header() {
           beta
         </span>
       </Link>
-      <nav style={{ display: "flex", alignItems: "center", gap: 28 }}>
-        <Link href="/" style={{ fontSize: 13, color: "var(--muted)" }}>
+      <nav className="site-nav" style={{ display: "flex", alignItems: "center", gap: 28 }}>
+        {/* Marketing links are the first thing to go on a phone — the
+            credit count and the sign-up button are what the header is
+            actually for, and both are reachable from the page itself. */}
+        <Link href="/" className="nav-marketing" style={{ fontSize: 13, color: "var(--muted)" }}>
           How it works
         </Link>
-        <Link href="/#pricing" style={{ fontSize: 13, color: "var(--muted)" }}>
+        <Link href="/#pricing" className="nav-marketing" style={{ fontSize: 13, color: "var(--muted)" }}>
           Pricing
         </Link>
         {me.signedIn ? (
@@ -63,10 +66,17 @@ export function Header() {
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
                 color: "var(--ink)",
+                whiteSpace: "nowrap",
               }}
             >
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--ink)" }} />
-              {me.credits} report {me.credits === 1 ? "credit" : "credits"}
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--ink)", flex: "none" }} />
+              {/* "report" is dropped on a phone; the pill sits next to the
+                  word "credit" either way, so nothing is lost. */}
+              <span>
+                {me.credits}
+                <span className="nav-marketing"> report</span>{" "}
+                {me.credits === 1 ? "credit" : "credits"}
+              </span>
             </span>
           </>
         ) : (

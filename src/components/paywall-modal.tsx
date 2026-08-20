@@ -43,13 +43,13 @@ export function PaywallModal() {
   const title = pendingReveal && noCreditsLeft ? "Keep going for the price of a coffee." : "Top up whenever you need more.";
   const niche =
     pendingReveal && noCreditsLeft && pendingReveal.nicheName
-      ? `You're opening ${pendingReveal.nicheName}. Both free reports are already used.`
+      ? `You're opening ${pendingReveal.nicheName}. Your free report is already used.`
       : `${me.credits} report ${me.credits === 1 ? "credit" : "credits"} left on your account — add more below.`;
 
   const options: { plan: PlanId; border: string }[] = [
     { plan: "single", border: "var(--hairline)" },
     { plan: "pack5", border: "var(--ink)" },
-    { plan: "pack12", border: "var(--hairline)" },
+    { plan: "pack15", border: "var(--hairline)" },
   ];
 
   return (

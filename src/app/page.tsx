@@ -12,7 +12,7 @@ const STATS = [
   { value: "10", label: "Live web searches per scout — read fresh at the moment you ask, not recalled" },
   { value: "4", label: "Niches scored per market, ranked by how underserved each one is" },
   { value: "~4min", label: "A full research run, from a broad topic to evidence-linked niches" },
-  { value: "2", label: "Full reports free on every new account — no card, no subscription" },
+  { value: "$0", label: "Your first report — no card, no subscription, nothing renews" },
 ];
 
 const STEPS = [
@@ -33,18 +33,16 @@ export default function LandingPage() {
 
   return (
     <main>
-      <section style={{ maxWidth: 1000, margin: "0 auto", padding: "110px 40px 84px", textAlign: "center" }}>
+      <section className="lp-hero" style={{ maxWidth: 1000, margin: "0 auto", textAlign: "center" }}>
         <div className="mono" style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 32 }}>
           Live market reconnaissance
         </div>
-        <h1 className="serif" style={{ fontWeight: 400, fontSize: 78, lineHeight: 1.04, letterSpacing: "-0.02em", margin: "0 0 26px" }}>
-          Give us an industry.
-          <br />
-          <span style={{ fontStyle: "italic" }}>We&rsquo;ll hand back the gaps.</span>
+        <h1 className="serif" style={{ fontWeight: 400, fontSize: "clamp(40px, 9vw, 78px)", lineHeight: 1.04, letterSpacing: "-0.02em", margin: "0 0 26px" }}>
+          Proof before you build.
         </h1>
         <p style={{ maxWidth: 560, margin: "0 auto 44px", fontSize: 17, lineHeight: 1.6, color: "var(--ink-soft)" }}>
-          Niche Scouter reads live search demand, marketplace listings and community chatter, then reports the
-          underserved corners of any market — with the evidence attached.
+          Enter an industry. Get underserved segments, demand signals and competitor blind spots — every claim
+          linked to a real source.
         </p>
 
         <form
@@ -55,14 +53,13 @@ export default function LandingPage() {
           style={{ maxWidth: 640, margin: "0 auto" }}
         >
           <div
+            className="lp-searchbar"
             style={{
               display: "flex",
               alignItems: "center",
               gap: 12,
-              padding: "8px 8px 8px 22px",
               background: "#fff",
               border: "1px solid var(--ink)",
-              borderRadius: 999,
             }}
           >
             <input
@@ -76,7 +73,7 @@ export default function LandingPage() {
               className="btn-hover"
               style={{ padding: "13px 26px", background: "var(--ink)", color: "var(--bg)", border: "none", borderRadius: 999, fontSize: 14, cursor: "pointer", whiteSpace: "nowrap" }}
             >
-              Scout niches
+              Run my first report free
             </button>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 8, marginTop: 18 }}>
@@ -98,7 +95,7 @@ export default function LandingPage() {
       </section>
 
       <section style={{ borderTop: "1px solid var(--hairline)", borderBottom: "1px solid var(--hairline)", background: "var(--bg-alt)" }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto", padding: 40, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 40 }}>
+        <div className="lp-stats" style={{ maxWidth: 1180, margin: "0 auto" }}>
           {STATS.map((s) => (
             <div key={s.label}>
               <div className="serif" style={{ fontSize: 38, lineHeight: 1 }}>{s.value}</div>
@@ -108,8 +105,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 1180, margin: "0 auto", padding: "96px 40px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 64 }}>
+      <section className="lp-method-sec" style={{ maxWidth: 1180, margin: "0 auto" }}>
+        <div className="lp-method">
           <div>
             <div className="mono" style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--muted)" }}>
               Method
@@ -120,7 +117,7 @@ export default function LandingPage() {
           </div>
           <div style={{ display: "grid", gap: 1, background: "var(--hairline)", borderTop: "1px solid var(--hairline)", borderBottom: "1px solid var(--hairline)" }}>
             {STEPS.map((st) => (
-              <div key={st.num} style={{ display: "grid", gridTemplateColumns: "56px 220px 1fr", gap: 28, padding: "30px 4px", background: "var(--bg)", alignItems: "start" }}>
+              <div key={st.num} className="lp-step" style={{ background: "var(--bg)" }}>
                 <div className="mono" style={{ fontSize: 11, color: "var(--muted)", paddingTop: 4 }}>{st.num}</div>
                 <div className="serif" style={{ fontSize: 24, lineHeight: 1.2 }}>{st.title}</div>
                 <div style={{ fontSize: 14, lineHeight: 1.65, color: "var(--ink-soft)" }}>{st.body}</div>
@@ -131,48 +128,51 @@ export default function LandingPage() {
       </section>
 
       <section id="pricing" style={{ borderTop: "1px solid var(--hairline)", background: "#fff" }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "88px 40px" }}>
+        <div className="lp-pricing" style={{ maxWidth: 1180, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
             <div className="mono" style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--muted)" }}>
               Pricing
             </div>
             <h2 className="serif" style={{ fontWeight: 400, fontSize: 44, lineHeight: 1.1, margin: "16px 0 12px", letterSpacing: "-0.01em" }}>
-              Two reports free. Then buy reports, not a subscription.
+              Buy reports, not a subscription.
             </h2>
+            <p style={{ fontSize: 15, color: "var(--muted)", margin: "0 0 10px" }}>
+              One wasted niche costs around $1,500 and six months. One report costs less than lunch.
+            </p>
             <p style={{ fontSize: 15, color: "var(--muted)", margin: 0 }}>
-              Searching and scoring are always free. Credits never expire, so come back whenever the next idea does.
+              Searching and scoring are always free, and credits never expire — come back whenever the next idea does.
             </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, alignItems: "stretch" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 230px), 1fr))", gap: 16, alignItems: "stretch" }}>
             <PlanCard
-              name="Free" tag="start here" price="$0" period="forever" reports="2 full reports included"
-              features={["Search and score any market", "2 full reports, kept forever", "Evidence and source links"]}
-              cta="Create account" btnBg="transparent" btnFg="var(--ink)"
+              name="Free" tag="start here" price="$0" period="first report" reports="1 full report included"
+              features={["Search and score any market", "1 full report, kept forever", "Evidence and source links", "No card required"]}
+              cta="Run your first report free" btnBg="transparent" btnFg="var(--ink)"
               onClick={() => openAuth()}
             />
             <PlanCard
-              name="Single report" tag="pay as you go" price="$5" period="one report" reports="$5.00 each"
+              name="1 report" tag="one-off" price={`$${PLANS.single.amountCents / 100}`} period="one report" reports="$9.00 each"
               features={["One full report, kept forever", "Every section and source link", "No commitment"]}
-              cta="Buy one report" btnBg="transparent" btnFg="var(--ink)"
+              cta="Buy 1 report" btnBg="transparent" btnFg="var(--ink)"
               onClick={() => openPaywall()}
             />
             <PlanCard
-              name="Report pack" tag="most popular" price={`$${PLANS.pack5.amountCents / 100}`} period="5 reports" reports="$3.00 each · save 40%"
-              features={["5 credits, never expire", "Unlock history in your dashboard", "Re-scout any market", "Nothing renews"]}
+              name="5 reports" tag="most founders start here" price={`$${PLANS.pack5.amountCents / 100}`} period="5 reports" reports="$5.80 each"
+              features={["5 credits, never expire", "Enough to compare markets properly", "Unlock history in your dashboard", "Nothing renews"]}
               cta="Buy 5 reports" btnBg="var(--ink)" btnFg="var(--bg)"
               onClick={() => openPaywall()}
             />
             <PlanCard
-              name="Deep dive pack" tag="best value" price={`$${PLANS.pack12.amountCents / 100}`} period="12 reports" reports="$2.50 each · save 50%"
-              features={["12 credits, never expire", "Everything in the report pack", "Lowest price per report", "Best for comparing several markets"]}
-              cta="Buy 12 reports" btnBg="transparent" btnFg="var(--ink)"
+              name="15 reports" tag="agencies & power users" price={`$${PLANS.pack15.amountCents / 100}`} period="15 reports" reports="$4.60 each"
+              features={["15 credits, never expire", "Lowest price per report", "Built for scouting a whole category", "Nothing renews"]}
+              cta="Buy 15 reports" btnBg="transparent" btnFg="var(--ink)"
               onClick={() => openPaywall()}
             />
           </div>
         </div>
       </section>
 
-      <footer style={{ borderTop: "1px solid var(--hairline)", padding: "36px 40px", display: "flex", justifyContent: "space-between" }} className="mono">
+      <footer className="mono lp-footer" style={{ borderTop: "1px solid var(--hairline)", display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "space-between" }}>
         <span style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--muted)" }}>Nichescouter.com</span>
         <span style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--muted)" }}>Evidence-linked market reports</span>
       </footer>

@@ -4,11 +4,25 @@ export interface NicheTeaser {
   name: string;
   teaser: string;
   demand: number;
+  gapScore: number;
   revenue: string;
   revenueNote: string;
 }
 
+/**
+ * A neighbouring market the findings in *this* report also point at.
+ * `linkedFinding` is what keeps the suggestion honest — it has to quote
+ * the specific thing in this report that makes the adjacency plausible,
+ * otherwise it is a generic guess wearing a citation.
+ */
+export interface Adjacency {
+  industry: string;
+  reason: string;
+  linkedFinding: string;
+}
+
 export interface NicheReport extends NicheTeaser {
+  adjacency: Adjacency[];
   thesis: string;
   metrics: { label: string; value: string }[];
   trend: number[];
@@ -38,6 +52,8 @@ export interface TupleNiche {
   name: string;
   teaser: string;
   demand: number;
+  gapScore: number;
+  adjacency: [string, string, string][];
   revenue: string;
   revenueNote: string;
   thesis: string;
