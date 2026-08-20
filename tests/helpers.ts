@@ -1,8 +1,10 @@
 import { PrismaClient } from "@prisma/client";
-import path from "node:path";
 
-const url = `file:${path.resolve(__dirname, "../prisma/test.db")}`;
-process.env.DATABASE_URL = url;
+// global-setup resolves and exports the throwaway database URL.
+const url =
+  process.env.TEST_DATABASE_URL ??
+  process.env.DATABASE_URL ??
+  "postgresql://postgres:devpass@127.0.0.1:5432/nichescouter_test?schema=public";
 
 export const db = new PrismaClient({ datasources: { db: { url } } });
 

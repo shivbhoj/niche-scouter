@@ -3,8 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  // Serverless platforms open a connection per invocation and exhaust a
+  // Postgres connection limit fast. Point DATABASE_URL at a pooler
+  // (PgBouncer / Supabase pooler / Neon pooled endpoint) and DIRECT_URL
+  // at the direct endpoint — migrations need a real session, which a
+  // transaction-mode pooler cannot provide.
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -55,7 +61,11 @@ model Unlock {
   niche     Niche    @relation(fields: [nicheId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
+  // Also the concurrency guard: this is what makes a duplicate unlock a
+  // constraint violation rather than a double charge.
   @@unique([userId, nicheId])
+  // The results page asks "which of these niches does this user own?"
+  @@index([nicheId])
 }
 
 model CreditTxn {
@@ -66,4 +76,8 @@ model CreditTxn {
   reason          String
   stripeSessionId String?  @unique
   createdAt       DateTime @default(now())
+
+  // The ledger is read per-user (balance audits, history) and only ever
+  // grows. Without this the scan is the whole table.
+  @@index([userId])
 }

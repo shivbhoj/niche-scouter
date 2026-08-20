@@ -12,9 +12,8 @@ and design decisions.
 ## Stack
 
 - **Next.js 16** (App Router, TypeScript)
-- **Prisma + SQLite** for real persistence (users, credits, unlocks, cached
-  market/niche data) — swap the datasource in `prisma/schema.prisma` to
-  Postgres for production
+- **Prisma + Postgres** for persistence (users, credits, unlocks, cached
+  market/niche data)
 - **Auth.js (NextAuth v5)** with a Credentials provider — real bcrypt-hashed
   passwords, JWT sessions. The single signup/sign-in form auto-provisions
   unknown emails (2 free credits) and verifies known ones.
@@ -25,10 +24,19 @@ and design decisions.
 
 ## Getting started
 
+You need a Postgres instance. Locally:
+
+```bash
+createdb nichescouter
+createdb nichescouter_test     # separate DB for the test suite
+```
+
+Then:
+
 ```bash
 npm install                # also runs `prisma generate`
 cp .env.example .env       # fill in what you have; see below
-npm run db:migrate         # creates prisma/dev.db (SQLite) and applies the schema
+npm run db:migrate         # applies the schema
 npm run dev
 ```
 
@@ -41,12 +49,25 @@ npm test          # vitest
 npm run check     # tsc + eslint + vitest
 ```
 
-The credit and unlock tests run against a real throwaway SQLite database
-built from the actual migrations (`prisma/test.db`, created and dropped
-per run) rather than a mocked Prisma client — the bugs they guard against
-are database-level races, which a mock cannot reproduce. They include a
-regression test for a shipped bug where concurrent unlock requests could
-each pass the same stale `credits > 0` read and drive a balance negative.
+Tests run against a **real Postgres database**, rebuilt from the actual
+migrations on every run. That is deliberate on two counts:
+
+- Mocking Prisma would defeat the point — the bugs these guard against are
+  database-level races, which a mock cannot reproduce. They include a
+  regression test for a shipped bug where concurrent unlock requests each
+  passed the same stale `credits > 0` read and drove a balance negative.
+- It must be the *same engine* as production. Concurrency semantics differ
+  between engines, so testing the race on SQLite while deploying on
+  Postgres proves very little.
+
+The harness drops and recreates the schema, so it refuses any
+`TEST_DATABASE_URL` whose database name doesn't contain `test` — a
+mistyped URL fails loudly instead of quietly wiping real data.
+
+The Stripe webhook tests sign payloads with Stripe's own signature
+algorithm, so signature verification is genuinely exercised without a
+Stripe account or network access — including that a **forged payload
+cannot mint credits** and that a redelivered event cannot double-grant.
 
 ## Environment variables
 
@@ -56,7 +77,9 @@ data. See `.env.example` for the full list.
 
 | Variable | Required? | What happens without it |
 |---|---|---|
-| `DATABASE_URL` | Yes | Defaults to a local SQLite file (`prisma/dev.db`) |
+| `DATABASE_URL` | Yes | Postgres connection string. On serverless, point at a **pooler** — a connection per invocation exhausts Postgres |
+| `DIRECT_URL` | Yes | Unpooled connection for migrations, which need a real session |
+| `TEST_DATABASE_URL` | For tests | Throwaway DB, dropped and rebuilt per run; name must contain `test` |
 | `AUTH_SECRET` | Yes | Set any random 32+ char string (`openssl rand -base64 32`) |
 | `ANTHROPIC_API_KEY` | No | Live search only works for the 4 example topics on the homepage (bundled data); any other topic returns a clear "set ANTHROPIC_API_KEY" error instead of fabricating data |
 | `ANTHROPIC_MODEL` | No | Defaults to `claude-sonnet-5`; override if that id ages out |

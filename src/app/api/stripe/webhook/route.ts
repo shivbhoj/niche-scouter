@@ -4,9 +4,18 @@ import { grantCredits } from "@/lib/credits";
 
 export async function POST(req: NextRequest) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
-  const signature = req.headers.get("stripe-signature");
-  if (!secret || !signature) {
+  // A missing secret is our misconfiguration; a missing signature is a
+  // bad request from the caller. Distinct causes deserve distinct codes,
+  // so that alerting on 5xx means "we broke something" rather than
+  // "someone probed the endpoint".
+  if (!secret) {
+    console.error("[stripe] STRIPE_WEBHOOK_SECRET is not set — cannot verify deliveries");
     return NextResponse.json({ error: "webhook not configured" }, { status: 503 });
+  }
+
+  const signature = req.headers.get("stripe-signature");
+  if (!signature) {
+    return NextResponse.json({ error: "missing stripe-signature header" }, { status: 400 });
   }
 
   const stripe = getStripe();

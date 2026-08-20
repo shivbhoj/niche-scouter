@@ -44,4 +44,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-prisma/test.db*
+# (Postgres test DB is external; nothing to ignore here)
