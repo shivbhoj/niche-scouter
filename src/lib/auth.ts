@@ -11,7 +11,7 @@ import { validateCredentials } from "@/lib/credentials";
 // their password.
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET || "niche-scouter-ai-studio-auth-secret-key-32-chars-long",
   pages: { signIn: "/" },
   providers: [
     Credentials({
